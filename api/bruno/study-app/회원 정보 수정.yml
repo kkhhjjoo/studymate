@@ -1,0 +1,28 @@
+info:
+  name: 회원 정보 수정
+  type: http
+  seq: 3
+
+http:
+  method: PATCH
+  url: "{{url}}/users/27"
+  headers:
+    - name: Authorization
+      value: Bearer {{accessToken}}
+    - name: client-id
+      value: "{{client-id}}"
+  body:
+    type: json
+    data: |-
+      {
+            "email": "admin@admin.com",
+            "name": "관리자",
+            "type": "admin"
+          }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

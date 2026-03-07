@@ -1,0 +1,32 @@
+info:
+  name: 상품 등록
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{url}}/seller/products/"
+  headers:
+    - name: client-id
+      value: "{{client-id}}"
+    - name: Authorization
+      value: Bearer {{accessToken}}
+  body:
+    type: json
+    data: |-
+      {
+          "name": "React + Next.js 심화 스터디",
+          "content": "프론트엔드 개발자를 위한 React와 Next.js 심화 학습 스터디입니다. 매주 토요일 오후 2시에 모여서 공식 문서를 함께 읽고, 실습 프로젝트를 진행합니다. 기초 지식이 있으신 분들 환영합니다!",
+          "price": 0,
+          "quantity": 6,
+          "shippingFees": 0,
+          "show": true,
+          "extra": { "category": "개발", "tags": ["React", "Next.js", "TypeScript"] }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

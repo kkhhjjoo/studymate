@@ -1,0 +1,21 @@
+info:
+  name: 상품 목록 조회
+  type: http
+  seq: 6
+
+http:
+  method: GET
+  url: "{{url}}/products/"
+  headers:
+    - name: client-id
+      value: "{{client-id}}"
+  body:
+    type: json
+    data: ""
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

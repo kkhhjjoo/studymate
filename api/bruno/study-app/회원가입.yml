@@ -1,0 +1,30 @@
+info:
+  name: 회원가입
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{url}}/users/"
+  headers:
+    - name: client-id
+      value: "{{client-id}}"
+  body:
+    type: json
+    data: |-
+      {
+        "email": "khjoo1203@naver.com",
+        "password": "12345678",
+        "name": "현주",
+        "phone": "01047587351",
+        "address": "경기도 화성시",
+        "type": "seller",
+        "image": "https://res.cloudinary.com/ddedslqvv/image/upload/v1762361889/openmarket/bK6Io05NOx1.png"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

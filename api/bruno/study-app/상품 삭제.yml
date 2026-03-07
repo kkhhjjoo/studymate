@@ -1,0 +1,18 @@
+info:
+  name: 상품 삭제
+  type: http
+  seq: 7
+
+http:
+  method: DELETE
+  url: "{{url}}/seller/products/32"
+  headers:
+    - name: Authorization
+      value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOjIxLCJ0eXBlIjoic2VsbGVyIiwiaWF0IjoxNzcyNzE3Nzk2LCJleHAiOjE3NzI4MDQxOTYsImlzcyI6IkZFQkMifQ.40PHqNESCbyelZDidka9tOk1XdrTs61T78I2rOlCzHk
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
