@@ -4,13 +4,14 @@ import {
   createContext,
   useContext,
   useState,
+  useEffect,
   useCallback,
   type ReactNode,
 } from 'react';
 import type { Study, Participant, ChatMessage } from './types';
 import type { User } from '@/types/user';
 import { initialStudies, initialMessages } from './mock-data';
-import { createStudyAPI } from './study-api';
+import { createStudyAPI, updateStudyAPI, deleteStudyAPI } from './study-api';
 import useUserStore from '@/zustand/userStore';
 
 interface StudyContextType {
@@ -42,9 +43,34 @@ export function StudyProvider({ children }: { children: ReactNode }) {
   const storeUser = useUserStore((state) => state.user);
   const currentUser: User | null = storeUser;
 
-  const [accessToken, setAccessToken] = useState('');
-  const [studies, setStudies] = useState<Study[]>(initialStudies);
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const accessToken = storeUser?.token?.accessToken ?? '';
+  const setAccessToken = () => {}; // kept for interface compatibility
+  const [studies, setStudies] = useState<Study[]>(() => {
+    if (typeof window === 'undefined') return initialStudies;
+    try {
+      const saved = localStorage.getItem('studies');
+      return saved ? JSON.parse(saved) : initialStudies;
+    } catch {
+      return initialStudies;
+    }
+  });
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    if (typeof window === 'undefined') return initialMessages;
+    try {
+      const saved = localStorage.getItem('chat-messages');
+      return saved ? JSON.parse(saved) : initialMessages;
+    } catch {
+      return initialMessages;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('studies', JSON.stringify(studies));
+  }, [studies]);
+
+  useEffect(() => {
+    localStorage.setItem('chat-messages', JSON.stringify(messages));
+  }, [messages]);
 
   const addStudy = useCallback(
     async (
@@ -73,14 +99,22 @@ export function StudyProvider({ children }: { children: ReactNode }) {
   );
 
   const updateStudy = useCallback((id: string, updates: Partial<Study>) => {
-    setStudies((prev) =>
-      prev.map((study) => (study.id === id ? { ...study, ...updates } : study)),
-    );
-  }, []);
+    setStudies((prev) => {
+      const updated = prev.map((study) => (study.id === id ? { ...study, ...updates } : study));
+      if (accessToken) {
+        const study = updated.find((s) => s.id === id);
+        if (study) updateStudyAPI(id, study, accessToken);
+      }
+      return updated;
+    });
+  }, [accessToken]);
 
   const deleteStudy = useCallback((id: string) => {
     setStudies((prev) => prev.filter((study) => study.id !== id));
-  }, []);
+    if (accessToken) {
+      deleteStudyAPI(id, accessToken);
+    }
+  }, [accessToken]);
 
   const applyToStudy = useCallback(
     (studyId: string, message: string) => {

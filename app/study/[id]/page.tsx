@@ -35,6 +35,8 @@ import {
   Settings,
   UserPlus,
   Send,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -47,7 +49,8 @@ export default function StudyDetailPage({ params }: StudyDetailPageProps) {
   const { id } = params;
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { getStudyById, applyToStudy, toggleStudyClosed, currentUser, sendMessage, getMessagesForStudy } = useStudy();
+  const { getStudyById, applyToStudy, toggleStudyClosed, deleteStudy, currentUser, sendMessage, getMessagesForStudy } = useStudy();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const storeUser = useUserStore((state) => state.user);
   const study = getStudyById(id);
 
@@ -349,13 +352,53 @@ export default function StudyDetailPage({ params }: StudyDetailPageProps) {
             )}
 
             {isHost && (
-              <Button
-                variant={study.isClosed ? 'default' : 'outline'}
-                className="w-full"
-                onClick={() => toggleStudyClosed(study.id)}
-              >
-                {study.isClosed ? '모집 재개하기' : '모집 마감하기'}
-              </Button>
+              <>
+                <Button
+                  variant={study.isClosed ? 'default' : 'outline'}
+                  className="w-full"
+                  onClick={() => toggleStudyClosed(study.id)}
+                >
+                  {study.isClosed ? '모집 재개하기' : '모집 마감하기'}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => router.push(`/study/${study.id}/edit`)}
+                >
+                  <Pencil className="mr-2 h-4 w-4" />
+                  스터디 수정
+                </Button>
+                <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="destructive" className="w-full">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      스터디 삭제
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>스터디 삭제</DialogTitle>
+                      <DialogDescription>
+                        정말 이 스터디를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                        취소
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => {
+                          deleteStudy(study.id);
+                          router.push('/');
+                        }}
+                      >
+                        삭제
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </>
             )}
           </aside>
         </div>

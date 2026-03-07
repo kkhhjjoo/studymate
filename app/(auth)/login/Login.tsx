@@ -33,7 +33,11 @@ const Login = () => {
     try {
       if (!credentialResponse.credential) throw new Error('구글 인증 정보가 없습니다.');
       // JWT payload 디코딩 (base64)
-      const payload = JSON.parse(atob(credentialResponse.credential.split('.')[1]));
+      const base64 = credentialResponse.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
+      );
+      const payload = JSON.parse(jsonPayload);
       setUser({
         _id: payload.sub,
         email: payload.email,

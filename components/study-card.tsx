@@ -119,7 +119,7 @@ export function StudyCard({ study }: StudyCardProps) {
                   className="justify-start gap-2"
                   onClick={(e) => {
                     e.stopPropagation();
-                    router.push(`/study/${study.id}`);
+                    router.push(`/profile/${study.hostId}`);
                   }}
                 >
                   <User className="h-4 w-4" />
