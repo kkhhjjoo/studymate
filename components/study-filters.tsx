@@ -46,14 +46,14 @@ export function StudyFilters({
     searchQuery || selectedCategory || selectedTags.length > 0 || showClosed;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="스터디 검색..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-10 rounded-xl h-11 border-border bg-background focus:ring-2 focus:ring-foreground/10"
+          className="pl-10"
         />
       </div>
 
@@ -65,10 +65,10 @@ export function StudyFilters({
               variant="ghost"
               size="sm"
               onClick={clearFilters}
-              className="h-auto px-2 py-1 text-xs text-muted-foreground hover:text-foreground rounded-lg"
+              className="h-auto px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
             >
               <X className="mr-1 h-3 w-3" />
-              초기화
+              필터 초기화
             </Button>
           )}
         </div>
@@ -77,7 +77,7 @@ export function StudyFilters({
             variant={selectedCategory === null ? 'default' : 'outline'}
             size="sm"
             onClick={() => onCategoryChange(null)}
-            className="h-9 rounded-full px-4"
+            className="h-8"
           >
             전체
           </Button>
@@ -87,7 +87,7 @@ export function StudyFilters({
               variant={selectedCategory === category ? 'default' : 'outline'}
               size="sm"
               onClick={() => onCategoryChange(category)}
-              className="h-9 rounded-full px-4"
+              className="h-8"
             >
               {category}
             </Button>
@@ -97,16 +97,12 @@ export function StudyFilters({
 
       <div className="space-y-3">
         <span className="text-sm font-medium text-foreground">인기 태그</span>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
           {POPULAR_TAGS.slice(0, 12).map((tag) => (
             <Badge
               key={tag}
               variant={selectedTags.includes(tag) ? 'default' : 'outline'}
-              className={`cursor-pointer transition-all rounded-full px-3 py-1.5 text-xs font-normal ${
-                selectedTags.includes(tag) 
-                  ? 'bg-foreground text-background hover:bg-foreground/90' 
-                  : 'hover:bg-secondary'
-              }`}
+              className="cursor-pointer transition-colors"
               onClick={() => toggleTag(tag)}
             >
               {tag}
@@ -115,12 +111,12 @@ export function StudyFilters({
         </div>
       </div>
 
-      <div className="pt-2">
+      <div className="flex items-center gap-2 pt-2">
         <Button
-          variant={showClosed ? 'default' : 'outline'}
+          variant={showClosed ? 'secondary' : 'outline'}
           size="sm"
           onClick={() => onShowClosedChange(!showClosed)}
-          className="h-9 rounded-full px-4"
+          className="h-8"
         >
           마감된 스터디 포함
         </Button>
