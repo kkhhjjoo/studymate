@@ -64,7 +64,7 @@ export function StudyCard({ study, accessToken }: StudyCardProps) {
                 {study.category}
               </Badge>
             </div>
-            <h3 className="font-semibold text-lg leading-tight text-foreground group-hover:text-primary transition-colors line-clamp-2">
+            <h3 className="font-semibold text-lg leading-tight text-primary transition-colors line-clamp-2">
               {study.title}
             </h3>
           </div>
@@ -78,12 +78,12 @@ export function StudyCard({ study, accessToken }: StudyCardProps) {
 
         <div className="flex flex-wrap gap-1.5 mb-4">
           {study.tags.slice(0, 3).map((tag) => (
-            <Badge key={tag} variant="secondary" className="text-xs font-normal">
+            <Badge key={tag} variant="secondary" className="text-xs font-normal bg-secondary/70 text-secondary-foreground border-0 rounded-full px-2.5">
               {tag}
             </Badge>
           ))}
           {study.tags.length > 3 && (
-            <Badge variant="secondary" className="text-xs font-normal">
+            <Badge variant="secondary" className = "text-xs font-normal bg-secondary/70 text-secondary-foreground border-0 rounded-full px-2.5">
               +{study.tags.length - 3}
             </Badge>
           )}
@@ -91,7 +91,7 @@ export function StudyCard({ study, accessToken }: StudyCardProps) {
 
         <div className="space-y-2 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 shrink-0" />
+            <Calendar className="h-4 w-4 shrink-0 text-accent" />
             <span className="truncate">
               {study.schedule ||
                 (study.startDate && !Number.isNaN(new Date(study.startDate).getTime())
@@ -107,14 +107,14 @@ export function StudyCard({ study, accessToken }: StudyCardProps) {
         </div>
       </CardContent>
 
-      <CardFooter className="pt-3 border-t border-border">
+      <CardFooter className="pt-4 border-t border-border/50 bg-secondary/20">
         <div className="flex w-full items-center justify-between">
           <div className="flex items-center gap-2">
             {accessToken && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 shrink-0 text-muted-foreground hover:text-red-500"
+                className="flex items-center gap-2.5 rounded-full px-2 py-1 hover:bg-secondary transition-colors"
                 onClick={handleBookmark}
                 disabled={isBookmarking || isBookmarked}
               >
@@ -129,16 +129,16 @@ export function StudyCard({ study, accessToken }: StudyCardProps) {
                 className="flex items-center gap-2 rounded-md px-1 py-0.5 hover:bg-secondary transition-colors"
                 onClick={(e) => e.stopPropagation()}
               >
-                <Avatar className="h-7 w-7">
+                <Avatar className="h-7 w-7 border border-border">
                   <AvatarFallback className="text-xs bg-secondary text-secondary-foreground">
                     {(study.hostName || '스터디장').charAt(0)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-sm text-muted-foreground">{study.hostName || '스터디장'}</span>
+                <span className="text-sm text-muted-foreground font-medium">{study.hostName || '스터디장'}</span>
               </button>
             </PopoverTrigger>
             <PopoverContent
-              className="w-40 p-2"
+              className="w-44 p-2 border-border/50"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex flex-col gap-1">

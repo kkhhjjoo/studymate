@@ -53,6 +53,8 @@ export default function CreateStudyPage() {
   const [customTag, setCustomTag] = useState('');
   const [maxMembers, setMaxMembers] = useState('6');
   const [locationIndex, setLocationIndex] = useState('');
+  const [useCustomLocation, setUseCustomLocation] = useState(false);
+  const [customLocationName, setCustomLocationName] = useState('');
   const [schedule, setSchedule] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -81,13 +83,16 @@ export default function CreateStudyPage() {
       return;
     }
 
-    if (!title || !description || !category || !locationIndex || !schedule || !startDate) {
+    const locationFilled = useCustomLocation ? !!customLocationName : !!locationIndex;
+    if (!title || !description || !category || !locationFilled || !schedule || !startDate) {
       toast.error('필수 항목을 모두 입력해주세요.');
       return;
     }
 
     setIsSubmitting(true);
-    const location = LOCATIONS[parseInt(locationIndex)];
+    const location = useCustomLocation
+      ? { name: customLocationName, lat: 0, lng: 0 }
+      : LOCATIONS[parseInt(locationIndex)];
 
     try {
       const result = await addStudy({
@@ -187,18 +192,14 @@ export default function CreateStudyPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="maxMembers">모집 인원 *</Label>
-                  <Select value={maxMembers} onValueChange={setMaxMembers}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[2, 3, 4, 5, 6, 7, 8, 10, 12, 15].map((num) => (
-                        <SelectItem key={num} value={num.toString()}>
-                          {num}명
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    id="maxMembers"
+                    type="number"
+                    min={2}
+                    max={100}
+                    value={maxMembers}
+                    onChange={(e) => setMaxMembers(e.target.value)}
+                  />
                 </div>
               </div>
 
@@ -251,22 +252,44 @@ export default function CreateStudyPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="location">장소 *</Label>
-                <Select value={locationIndex} onValueChange={setLocationIndex} required>
-                  <SelectTrigger>
-                    <SelectValue placeholder="장소 선택" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LOCATIONS.map((loc, index) => (
-                      <SelectItem key={index} value={index.toString()}>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4" />
-                          {loc.name}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="location">장소 *</Label>
+                  <button
+                    type="button"
+                    className="text-xs text-blue-500 underline"
+                    onClick={() => {
+                      setUseCustomLocation(!useCustomLocation);
+                      setLocationIndex('');
+                      setCustomLocationName('');
+                    }}
+                  >
+                    {useCustomLocation ? '목록에서 선택' : '직접 입력'}
+                  </button>
+                </div>
+                {useCustomLocation ? (
+                  <Input
+                    id="location"
+                    placeholder="장소명을 직접 입력하세요"
+                    value={customLocationName}
+                    onChange={(e) => setCustomLocationName(e.target.value)}
+                  />
+                ) : (
+                  <Select value={locationIndex} onValueChange={setLocationIndex} required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="장소 선택" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LOCATIONS.map((loc, index) => (
+                        <SelectItem key={index} value={index.toString()}>
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4" />
+                            {loc.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -282,7 +305,7 @@ export default function CreateStudyPage() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="startDate">시작일 *</Label>
+                  <Label htmlFor="startDate">시작일 (선택)</Label>
                   <Input
                     id="startDate"
                     type="date"
@@ -292,7 +315,7 @@ export default function CreateStudyPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="endDate">��료일 (선택)</Label>
+                  <Label htmlFor="endDate">종료일 (선택)</Label>
                   <Input
                     id="endDate"
                     type="date"
