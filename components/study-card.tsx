@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import type { Study } from '@/lib/types';
 import { addBookmarkAPI } from '@/lib/bookmark-api';
-import { Calendar, MapPin, Users, MessageCircle, User, Heart } from 'lucide-react';
+import { Calendar, MapPin, Users, MessageCircle, User, Heart, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { toast } from 'react-toastify';
@@ -41,57 +41,77 @@ export function StudyCard({ study, accessToken }: StudyCardProps) {
 
   return (
     <Card
-      className="group h-full transition-all duration-200 hover:shadow-lg hover:border-primary/30 cursor-pointer"
+      className="group h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer bg-card border-border/50 overflow-hidden"
       onClick={() => router.push(`/study/${study.id}`)}
     >
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 relative">
+        {/* Status Badge */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-3">
               <Badge
                 variant={study.isClosed ? 'secondary' : isFull ? 'outline' : 'default'}
                 className={
                   study.isClosed
-                    ? 'bg-muted text-muted-foreground'
+                    ? 'bg-muted text-muted-foreground border-0'
                     : isFull
-                    ? 'border-amber-500 text-amber-600 bg-amber-50'
-                    : ''
+                    ? 'border-amber-400 text-amber-700 bg-amber-50'
+                    : 'bg-primary text-primary-foreground border-0'
                 }
               >
                 {study.isClosed ? '모집 마감' : isFull ? '인원 마감' : '모집중'}
               </Badge>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-border/70 text-muted-foreground">
                 {study.category}
               </Badge>
             </div>
-            <h3 className="font-semibold text-lg leading-tight text-foreground group-hover:text-primary transition-colors line-clamp-2">
+            <h3 className="font-semibold text-lg leading-snug text-foreground group-hover:text-primary transition-colors line-clamp-2">
               {study.title}
             </h3>
           </div>
+          {accessToken && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 shrink-0 rounded-full text-muted-foreground hover:text-rose-500 hover:bg-rose-50 -mt-1 -mr-2"
+              onClick={handleBookmark}
+              disabled={isBookmarking || isBookmarked}
+            >
+              <Heart
+                className={`h-5 w-5 transition-colors ${isBookmarked ? 'fill-rose-500 text-rose-500' : ''}`}
+              />
+            </Button>
+          )}
         </div>
       </CardHeader>
 
-      <CardContent className="pb-3">
-        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+      <CardContent className="pb-4">
+        <p className="text-sm text-muted-foreground line-clamp-2 mb-4 leading-relaxed">
           {study.description}
         </p>
 
+        {/* Tags */}
         <div className="flex flex-wrap gap-1.5 mb-4">
           {study.tags.slice(0, 3).map((tag) => (
-            <Badge key={tag} variant="secondary" className="text-xs font-normal">
+            <Badge 
+              key={tag} 
+              variant="secondary" 
+              className="text-xs font-normal bg-secondary/70 text-secondary-foreground border-0 rounded-full px-2.5"
+            >
               {tag}
             </Badge>
           ))}
           {study.tags.length > 3 && (
-            <Badge variant="secondary" className="text-xs font-normal">
+            <Badge variant="secondary" className="text-xs font-normal bg-secondary/70 text-secondary-foreground border-0 rounded-full px-2.5">
               +{study.tags.length - 3}
             </Badge>
           )}
         </div>
 
-        <div className="space-y-2 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 shrink-0" />
+        {/* Info */}
+        <div className="space-y-2.5 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2.5">
+            <Calendar className="h-4 w-4 shrink-0 text-accent" />
             <span className="truncate">
               {study.schedule ||
                 (study.startDate && !Number.isNaN(new Date(study.startDate).getTime())
@@ -100,52 +120,38 @@ export function StudyCard({ study, accessToken }: StudyCardProps) {
                 '-'}
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 shrink-0" />
+          <div className="flex items-center gap-2.5">
+            <MapPin className="h-4 w-4 shrink-0 text-accent" />
             <span className="truncate">{study.location.name}</span>
           </div>
         </div>
       </CardContent>
 
-      <CardFooter className="pt-3 border-t border-border">
+      <CardFooter className="pt-4 border-t border-border/50 bg-secondary/20">
         <div className="flex w-full items-center justify-between">
-          <div className="flex items-center gap-2">
-            {accessToken && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 shrink-0 text-muted-foreground hover:text-red-500"
-                onClick={handleBookmark}
-                disabled={isBookmarking || isBookmarked}
-              >
-                <Heart
-                  className={`h-4 w-4 ${isBookmarked ? 'fill-red-500 text-red-500' : ''}`}
-                />
-              </Button>
-            )}
-            <Popover>
+          <Popover>
             <PopoverTrigger asChild>
               <button
-                className="flex items-center gap-2 rounded-md px-1 py-0.5 hover:bg-secondary transition-colors"
+                className="flex items-center gap-2.5 rounded-full px-2 py-1 hover:bg-secondary transition-colors"
                 onClick={(e) => e.stopPropagation()}
               >
-                <Avatar className="h-7 w-7">
-                  <AvatarFallback className="text-xs bg-secondary text-secondary-foreground">
+                <Avatar className="h-7 w-7 border border-border">
+                  <AvatarFallback className="text-xs bg-primary/10 text-primary font-medium">
                     {(study.hostName || '스터디장').charAt(0)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-sm text-muted-foreground">{study.hostName || '스터디장'}</span>
+                <span className="text-sm text-muted-foreground font-medium">{study.hostName || '스터디장'}</span>
               </button>
             </PopoverTrigger>
             <PopoverContent
-              className="w-40 p-2"
+              className="w-44 p-2 border-border/50"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex flex-col gap-1">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="justify-start gap-2"
+                  className="justify-start gap-2 text-muted-foreground hover:text-foreground"
                   onClick={(e) => {
                     e.stopPropagation();
                     router.push(`/study/${study.id}?tab=chat`);
@@ -157,7 +163,7 @@ export function StudyCard({ study, accessToken }: StudyCardProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="justify-start gap-2"
+                  className="justify-start gap-2 text-muted-foreground hover:text-foreground"
                   onClick={(e) => {
                     e.stopPropagation();
                     router.push(`/profile/${study.hostId}`);
@@ -169,13 +175,15 @@ export function StudyCard({ study, accessToken }: StudyCardProps) {
               </div>
             </PopoverContent>
           </Popover>
-          </div>
 
-          <div className="flex items-center gap-1.5 text-sm">
-            <Users className="h-4 w-4 text-muted-foreground" />
-            <span className={isFull ? 'text-amber-600 font-medium' : 'text-muted-foreground'}>
-              {study.currentMembers}/{study.maxMembers}
-            </span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 text-sm">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <span className={isFull ? 'text-amber-600 font-semibold' : 'text-muted-foreground font-medium'}>
+                {study.currentMembers}/{study.maxMembers}
+              </span>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-1 transition-all" />
           </div>
         </div>
       </CardFooter>
