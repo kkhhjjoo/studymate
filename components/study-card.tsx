@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,15 +8,36 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import type { Study } from '@/lib/types';
-import { Calendar, MapPin, Users, MessageCircle, User } from 'lucide-react';
+import { addBookmarkAPI } from '@/lib/bookmark-api';
+import { Calendar, MapPin, Users, MessageCircle, User, Heart } from 'lucide-react';
+import { format } from 'date-fns';
+import { ko } from 'date-fns/locale';
+import { toast } from 'react-toastify';
 
 interface StudyCardProps {
   study: Study;
+  accessToken?: string;
 }
 
-export function StudyCard({ study }: StudyCardProps) {
+export function StudyCard({ study, accessToken }: StudyCardProps) {
   const router = useRouter();
   const isFull = study.currentMembers >= study.maxMembers;
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isBookmarking, setIsBookmarking] = useState(false);
+
+  const handleBookmark = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!accessToken || isBookmarking || isBookmarked) return;
+    setIsBookmarking(true);
+    const ok = await addBookmarkAPI(study.id, accessToken);
+    setIsBookmarking(false);
+    if (ok) {
+      setIsBookmarked(true);
+      toast.success('북마크에 추가되었습니다.');
+    } else {
+      toast.error('북마크 추가에 실패했습니다.');
+    }
+  };
 
   return (
     <Card
@@ -70,7 +92,13 @@ export function StudyCard({ study }: StudyCardProps) {
         <div className="space-y-2 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 shrink-0" />
-            <span className="truncate">{study.schedule}</span>
+            <span className="truncate">
+              {study.schedule ||
+                (study.startDate && !Number.isNaN(new Date(study.startDate).getTime())
+                  ? format(new Date(study.startDate), 'yyyy.MM.dd', { locale: ko })
+                  : study.startDate) ||
+                '-'}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4 shrink-0" />
@@ -81,8 +109,21 @@ export function StudyCard({ study }: StudyCardProps) {
 
       <CardFooter className="pt-3 border-t border-border">
         <div className="flex w-full items-center justify-between">
-          {/* 호스트 아바타 - 클릭 시 말풍선 */}
-          <Popover>
+          <div className="flex items-center gap-2">
+            {accessToken && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0 text-muted-foreground hover:text-red-500"
+                onClick={handleBookmark}
+                disabled={isBookmarking || isBookmarked}
+              >
+                <Heart
+                  className={`h-4 w-4 ${isBookmarked ? 'fill-red-500 text-red-500' : ''}`}
+                />
+              </Button>
+            )}
+            <Popover>
             <PopoverTrigger asChild>
               <button
                 className="flex items-center gap-2 rounded-md px-1 py-0.5 hover:bg-secondary transition-colors"
@@ -90,10 +131,10 @@ export function StudyCard({ study }: StudyCardProps) {
               >
                 <Avatar className="h-7 w-7">
                   <AvatarFallback className="text-xs bg-secondary text-secondary-foreground">
-                    {study.hostName.charAt(0)}
+                    {(study.hostName || '스터디장').charAt(0)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-sm text-muted-foreground">{study.hostName}</span>
+                <span className="text-sm text-muted-foreground">{study.hostName || '스터디장'}</span>
               </button>
             </PopoverTrigger>
             <PopoverContent
@@ -128,6 +169,7 @@ export function StudyCard({ study }: StudyCardProps) {
               </div>
             </PopoverContent>
           </Popover>
+          </div>
 
           <div className="flex items-center gap-1.5 text-sm">
             <Users className="h-4 w-4 text-muted-foreground" />

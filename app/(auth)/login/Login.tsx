@@ -1,5 +1,6 @@
 'use client'
 
+import type { User } from '@/types/user';
 import useUserStore from '@/zustand/userStore';
 import { GoogleLogin } from '@react-oauth/google';
 import { useRouter } from 'next/navigation';
@@ -29,19 +30,48 @@ const Login = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleGoogleSuccess = (credentialResponse: { credential?: string }) => {
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  const handleGoogleSuccess = async (credentialResponse: { credential?: string }) => {
+    if (!credentialResponse.credential) {
+      toast.error('구글 인증 정보가 없습니다.');
+      return;
+    }
+    setIsGoogleLoading(true);
     try {
-      if (!credentialResponse.credential) throw new Error('구글 인증 정보가 없습니다.');
-      // JWT payload 디코딩 (base64)
+      if (API_URL && CLIENT_ID) {
+        const res = await fetch(`${API_URL}/users/login/with`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Client-Id': CLIENT_ID,
+          },
+          body: JSON.stringify({
+            credential: credentialResponse.credential,
+          }),
+        });
+
+        const data = await res.json();
+        if (res.ok && data.item) {
+          setUser(data.item);
+          router.push('/');
+          return;
+        }
+      }
+
+      // API 미지원 시: 구글 JWT 디코딩 후 로컬 로그인 처리
       const base64 = credentialResponse.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
       const jsonPayload = decodeURIComponent(
-        atob(base64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
       );
       const payload = JSON.parse(jsonPayload);
       setUser({
         _id: payload.sub,
-        email: payload.email,
-        name: payload.name,
+        email: payload.email ?? '',
+        name: payload.name ?? payload.email ?? '사용자',
         type: 'google',
         gender: '',
         age: 0,
@@ -51,6 +81,8 @@ const Login = () => {
       router.push('/');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '구글 로그인에 실패했습니다.');
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
@@ -69,13 +101,20 @@ const Login = () => {
           'Client-Id': CLIENT_ID!,
         },
         body: JSON.stringify({
-          loginId: formData.email,
+          email: formData.email,
           password: formData.password,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || '로그인에 실패했습니다.');
-      setUser(data.item);
+      const data = (await res.json()) as { message?: string; errors?: Record<string, { msg?: string }>; item?: User };
+      if (!res.ok) {
+        let errMsg = data.message || '로그인에 실패했습니다.';
+        if (data.errors && typeof data.errors === 'object') {
+          const msgs = Object.values(data.errors).map((e) => e?.msg).filter(Boolean) as string[];
+          if (msgs.length) errMsg = msgs.join(', ');
+        }
+        throw new Error(errMsg);
+      }
+      if (data.item) setUser(data.item);
       router.push('/');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '로그인에 실패했습니다.');
@@ -136,13 +175,25 @@ const Login = () => {
 
         {/* 구글 로그인 */}
         <div className="mt-8">
-          <p className="text-center text-sm text-gray-500 mb-4">-외부 계정으로 로그인하기-</p>
-          <div className="flex justify-center">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => toast.error('구글 로그인에 실패했습니다.')}
-            />
-          </div>
+          <p className="text-center text-sm text-gray-500 mb-4">- 또는 -</p>
+          {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? (
+            <div className="flex flex-col items-center gap-3">
+              {isGoogleLoading && (
+                <p className="text-sm text-gray-500">구글 로그인 중...</p>
+              )}
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => {
+                  setIsGoogleLoading(false);
+                  toast.error('구글 로그인에 실패했습니다.');
+                }}
+              />
+            </div>
+          ) : (
+            <p className="text-center text-sm text-gray-500">
+              Google 로그인을 사용하려면 .env에 NEXT_PUBLIC_GOOGLE_CLIENT_ID를 설정해주세요.
+            </p>
+          )}
         </div>
       </div>
     </div>

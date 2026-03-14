@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/header';
 import { Button } from '@/components/ui/button';
@@ -17,9 +17,12 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useStudy } from '@/lib/study-context';
+import useUserStore from '@/zustand/userStore';
 import { STUDY_CATEGORIES, POPULAR_TAGS } from '@/lib/types';
 import { ArrowLeft, MapPin, X } from 'lucide-react';
 import Link from 'next/link';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const LOCATIONS = [
   { name: '강남역 스터디카페', lat: 37.4979, lng: 127.0276 },
@@ -33,6 +36,15 @@ const LOCATIONS = [
 export default function CreateStudyPage() {
   const router = useRouter();
   const { addStudy, currentUser } = useStudy();
+  const hasHydrated = useUserStore((s) => s.hasHydrated);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (hasHydrated && !currentUser) {
+      toast.error('스터디를 만들려면 로그인해주세요.');
+      router.replace('/login');
+    }
+  }, [hasHydrated, currentUser, router]);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -63,33 +75,57 @@ export default function CreateStudyPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!title || !description || !category || !locationIndex || !schedule || !startDate) {
+    if (!currentUser) {
+      toast.error('스터디를 만들려면 로그인해주세요.');
+      router.push('/login');
       return;
     }
 
+    if (!title || !description || !category || !locationIndex || !schedule || !startDate) {
+      toast.error('필수 항목을 모두 입력해주세요.');
+      return;
+    }
+
+    setIsSubmitting(true);
     const location = LOCATIONS[parseInt(locationIndex)];
 
-    await addStudy({
-      title,
-      description,
-      category,
-      tags: selectedTags,
-      maxMembers: parseInt(maxMembers),
-      hostId: currentUser._id,
-      hostName: currentUser.name,
-      hostAvatar: currentUser.image,
-      location,
-      schedule,
-      startDate,
-      endDate: endDate || undefined,
-      isClosed: false,
-    });
+    try {
+      const result = await addStudy({
+        title,
+        description,
+        category,
+        tags: selectedTags,
+        maxMembers: parseInt(maxMembers),
+        hostId: String(currentUser._id),
+        hostName: currentUser.name ?? '스터디장',
+        hostAvatar: currentUser.image,
+        location,
+        schedule,
+        startDate,
+        endDate: endDate || undefined,
+        isClosed: false,
+      });
 
-    router.push('/');
+      if (result.success) {
+        toast.success('스터디 생성 완료');
+        router.push('/');
+      } else {
+        toast.error('스터디 생성에 실패했습니다.');
+      }
+    } catch {
+      toast.error('스터디 생성에 실패했습니다.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (hasHydrated && !currentUser) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background">
+      <ToastContainer />
       <Header />
 
       <main className="container mx-auto px-4 py-8 max-w-2xl">
@@ -270,8 +306,8 @@ export default function CreateStudyPage() {
                 <Button type="button" variant="outline" className="flex-1" asChild>
                   <Link href="/">취소</Link>
                 </Button>
-                <Button type="submit" className="flex-1">
-                  스터디 만들기
+                <Button type="submit" className="flex-1" disabled={isSubmitting}>
+                  {isSubmitting ? '생성 중...' : '스터디 만들기'}
                 </Button>
               </div>
             </form>

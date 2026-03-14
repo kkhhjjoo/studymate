@@ -5,6 +5,6 @@ variables:
   - name: client-id
     value: febc15-final12-ecad
   - name: accessToken
-    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOjIsInR5cGUiOiJzZWxsZXIiLCJpYXQiOjE3NzI3ODE1ODEsImV4cCI6MTc3Mjg2Nzk4MSwiaXNzIjoiRkVCQyJ9.7vIEISQfyPmvuMzJYrt-URevPxtRooDXkLFkiz9N5Og
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOjksInR5cGUiOiJzZWxsZXIiLCJpYXQiOjE3NzI4ODMxNzksImV4cCI6MTc3Mjk2OTU3OSwiaXNzIjoiRkVCQyJ9.WEchBuwH09lS6YlZjjnOUb5uijp0Udzn3If7__a1Zfc
   - name: refreshToken
-    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NzI3ODE1ODIsImV4cCI6MTc3NTM3MzU4MiwiaXNzIjoiRkVCQyJ9.HpcSwGTdDrwa29HNBnRNZpyzYFPc57HapQxjfA5ccwI
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NzI4ODMxNzksImV4cCI6MTc3NTQ3NTE3OSwiaXNzIjoiRkVCQyJ9.tIP5f3rpb5FKFD7KKpd8XWNNNfqm8phbDb-P593vwuU

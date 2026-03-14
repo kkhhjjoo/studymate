@@ -7,9 +7,11 @@ import { StudyFilters } from '@/components/study-filters';
 import { useStudy } from '@/lib/study-context';
 import type { StudyCategory } from '@/lib/types';
 import { BookOpen, TrendingUp, Users } from 'lucide-react';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function HomePage() {
-  const { studies } = useStudy();
+  const { studies, accessToken } = useStudy();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<StudyCategory | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -51,6 +53,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <ToastContainer />
       <Header />
 
       <main className="container mx-auto px-4 py-8">
@@ -132,7 +135,7 @@ export default function HomePage() {
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {filteredStudies.map((study) => (
-                  <StudyCard key={study.id} study={study} />
+                  <StudyCard key={study.id} study={study} accessToken={accessToken} />
                 ))}
               </div>
             )}

@@ -13,10 +13,11 @@ http:
     type: json
     data: |-
       {
-        "email": "khjoo1203@naver.com",
+        "email": "hyunjoo1203@naver.com",
+        "loginId": "hyunjoo1203@naver.com",
         "password": "12345678",
-        "name": "현주",
-        "phone": "01047587351",
+        "name": "엘라",
+        "phone": "01012345678",
         "address": "경기도 화성시",
         "type": "seller",
         "image": "https://res.cloudinary.com/ddedslqvv/image/upload/v1762361889/openmarket/bK6Io05NOx1.png"

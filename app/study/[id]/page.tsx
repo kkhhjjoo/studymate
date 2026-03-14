@@ -23,6 +23,8 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useStudy } from '@/lib/study-context';
+import { fetchProductByIdAPI } from '@/lib/study-api';
+import type { Study } from '@/lib/types';
 import { ParticipantManager } from '@/components/participant-manager';
 import { StudyMap } from '@/components/study-map';
 import {
@@ -37,7 +39,11 @@ import {
   Send,
   Pencil,
   Trash2,
+  Heart,
 } from 'lucide-react';
+import { addBookmarkAPI } from '@/lib/bookmark-api';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
@@ -49,10 +55,35 @@ export default function StudyDetailPage({ params }: StudyDetailPageProps) {
   const { id } = params;
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { getStudyById, applyToStudy, toggleStudyClosed, deleteStudy, currentUser, sendMessage, getMessagesForStudy } = useStudy();
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const { getStudyById, applyToStudy, toggleStudyClosed, deleteStudy, currentUser, sendMessage, getMessagesForStudy, accessToken } = useStudy();
   const storeUser = useUserStore((state) => state.user);
-  const study = getStudyById(id);
+  const [study, setStudy] = useState<Study | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isBookmarking, setIsBookmarking] = useState(false);
+
+  useEffect(() => {
+    if (!id) {
+      setStudy(getStudyById(id) ?? null);
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    fetchProductByIdAPI(id, accessToken)
+      .then((apiStudy) => {
+        if (cancelled) return;
+        setStudy(apiStudy ?? getStudyById(id) ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setStudy(getStudyById(id) ?? null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [id, accessToken, getStudyById]);
 
   const [applyMessage, setApplyMessage] = useState('');
   const [isApplyDialogOpen, setIsApplyDialogOpen] = useState(false);
@@ -60,7 +91,12 @@ export default function StudyDetailPage({ params }: StudyDetailPageProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const defaultTab = searchParams.get('tab') ?? 'chat';
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const messages = study ? getMessagesForStudy(study.id) : [];
+
+  useEffect(() => {
+    setActiveTab(searchParams.get('tab') ?? 'chat');
+  }, [searchParams]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -73,6 +109,17 @@ export default function StudyDetailPage({ params }: StudyDetailPageProps) {
     sendMessage(study.id, chatInput.trim());
     setChatInput('');
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-16 text-center">
+          <p className="text-muted-foreground">로딩 중...</p>
+        </main>
+      </div>
+    );
+  }
 
   if (!study) {
     return (
@@ -90,21 +137,42 @@ export default function StudyDetailPage({ params }: StudyDetailPageProps) {
     );
   }
 
-  const isHost = currentUser ? study.hostId === currentUser._id : false;
+  const isHost = Boolean(currentUser && study.hostId && String(study.hostId) === String(currentUser._id));
+  const isApprovedParticipant = currentUser
+    ? study.participants.some(
+        (p) => String(p.userId) === String(currentUser._id) && p.status === 'approved'
+      )
+    : false;
+  const canViewChat = isHost || isApprovedParticipant;
   const hasApplied = currentUser ? study.participants.some((p) => p.userId === currentUser._id) : false;
   const isFull = study.currentMembers >= study.maxMembers;
   const canApply = !isHost && !hasApplied && !study.isClosed && !isFull;
+
+  const handleBookmark = async () => {
+    if (!accessToken || isBookmarking) return;
+    setIsBookmarking(true);
+    const ok = await addBookmarkAPI(study.id, accessToken);
+    setIsBookmarking(false);
+    if (ok) {
+      setIsBookmarked(true);
+      toast.success('북마크에 추가되었습니다.');
+    } else {
+      toast.error('북마크 추가에 실패했습니다.');
+    }
+  };
 
   const handleApply = () => {
     if (applyMessage.trim()) {
       applyToStudy(study.id, applyMessage.trim());
       setApplyMessage('');
       setIsApplyDialogOpen(false);
+      fetchProductByIdAPI(study.id, accessToken).then((updated) => updated && setStudy(updated));
     }
   };
 
   return (
     <div className="min-h-screen bg-background">
+      <ToastContainer />
       <Header />
 
       <main className="container mx-auto px-4 py-8">
@@ -134,18 +202,77 @@ export default function StudyDetailPage({ params }: StudyDetailPageProps) {
                 <Badge variant="outline">{study.category}</Badge>
               </div>
 
-              <h1 className="text-3xl font-bold text-foreground mb-4 text-balance">
-                {study.title}
-              </h1>
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+                <h1 className="text-3xl font-bold text-foreground text-balance">
+                  {study.title}
+                </h1>
+                <div className="flex items-center gap-2 shrink-0">
+                  {currentUser && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleBookmark}
+                      disabled={isBookmarking || isBookmarked}
+                      className={isBookmarked ? 'text-red-500' : ''}
+                    >
+                      <Heart
+                        className={`h-5 w-5 ${isBookmarked ? 'fill-current' : ''}`}
+                      />
+                    </Button>
+                  )}
+                  {isHost && (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                      onClick={() => router.push(`/study/${study.id}/edit`)}
+                    >
+                      <Pencil className="mr-1.5 h-4 w-4" />
+                      수정하기
+                    </Button>
+                    <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                          <Trash2 className="mr-1.5 h-4 w-4" />
+                          삭제하기
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>스터디 삭제</DialogTitle>
+                          <DialogDescription>
+                            정말 이 스터디를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                            취소
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            onClick={() => {
+                              deleteStudy(study.id);
+                              router.push('/');
+                            }}
+                          >
+                            삭제
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </>
+                  )}
+                </div>
+              </div>
 
               <div className="flex items-center gap-3 mb-6">
                 <Avatar className="h-10 w-10">
                   <AvatarFallback className="bg-secondary text-secondary-foreground">
-                    {study.hostName.charAt(0)}
+                    {(study.hostName || '스터디장').charAt(0)}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium text-foreground">{study.hostName}</p>
+                  <p className="font-medium text-foreground">{study.hostName || '스터디장'}</p>
                   <p className="text-sm text-muted-foreground">스터디장</p>
                 </div>
               </div>
@@ -163,7 +290,7 @@ export default function StudyDetailPage({ params }: StudyDetailPageProps) {
               </p>
             </div>
 
-            <Tabs defaultValue={defaultTab} className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="chat" className="gap-2">
                   <MessageCircle className="h-4 w-4" />
@@ -184,72 +311,76 @@ export default function StudyDetailPage({ params }: StudyDetailPageProps) {
               <TabsContent value="chat" className="mt-4">
                 <Card>
                   <CardContent className="p-4 flex flex-col gap-3">
-                    {/* 메시지 목록 */}
-                    <div
-                      ref={scrollRef}
-                      className="h-72 overflow-y-auto flex flex-col gap-3 pr-1"
-                    >
-                      {messages.length === 0 ? (
-                        <p className="text-center text-sm text-muted-foreground mt-8">
-                          첫 메시지를 보내보세요!
+                    {!canViewChat ? (
+                      <div className="h-72 flex items-center justify-center">
+                        <p className="text-center text-sm text-muted-foreground">
+                          {currentUser
+                            ? '참여 승인 후 채팅을 이용할 수 있습니다.'
+                            : '채팅하려면 로그인 후 스터디에 참여해주세요.'}
                         </p>
-                      ) : (
-                        messages.map((msg) => {
-                          const isMine = storeUser?._id === msg.userId;
-                          return (
-                            <div
-                              key={msg.id}
-                              className={`flex items-end gap-2 ${isMine ? 'flex-row-reverse' : ''}`}
-                            >
-                              <Avatar className="h-7 w-7 shrink-0">
-                                <AvatarFallback className="text-xs bg-secondary">
-                                  {msg.userName.charAt(0)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className={`flex flex-col gap-0.5 max-w-[70%] ${isMine ? 'items-end' : ''}`}>
-                                <span className="text-xs text-muted-foreground">{msg.userName}</span>
-                                <div
-                                  className={`rounded-2xl px-3 py-2 text-sm ${
-                                    isMine
-                                      ? 'bg-primary text-primary-foreground rounded-br-sm'
-                                      : 'bg-secondary text-secondary-foreground rounded-bl-sm'
-                                  }`}
-                                >
-                                  {msg.content}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-                    {/* 입력창 */}
-                    {storeUser ? (
-                      <div className="flex gap-2">
-                        <Input
-                          value={chatInput}
-                          onChange={(e) => setChatInput(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                          placeholder="메시지를 입력하세요..."
-                          className="flex-1"
-                        />
-                        <Button size="icon" onClick={handleSendMessage} disabled={!chatInput.trim()}>
-                          <Send className="h-4 w-4" />
-                        </Button>
                       </div>
                     ) : (
-                      <p className="text-center text-sm text-muted-foreground">
-                        채팅하려면{' '}
-                        <a href="/login" className="text-primary underline">로그인</a>
-                        {' '}해주세요.
-                      </p>
+                      <>
+                        <div
+                          ref={scrollRef}
+                          className="h-72 overflow-y-auto flex flex-col gap-3 pr-1"
+                        >
+                          {messages.length === 0 ? (
+                            <p className="text-center text-sm text-muted-foreground mt-8">
+                              첫 메시지를 보내보세요!
+                            </p>
+                          ) : (
+                            messages.map((msg) => {
+                              const isMine = storeUser?._id === msg.userId;
+                              return (
+                                <div
+                                  key={msg.id}
+                                  className={`flex items-end gap-2 ${isMine ? 'flex-row-reverse' : ''}`}
+                                >
+                                  <Avatar className="h-7 w-7 shrink-0">
+                                    <AvatarFallback className="text-xs bg-secondary">
+                                      {(msg.userName || '').charAt(0)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className={`flex flex-col gap-0.5 max-w-[70%] ${isMine ? 'items-end' : ''}`}>
+                                    <span className="text-xs text-muted-foreground">{msg.userName}</span>
+                                    <div
+                                      className={`rounded-2xl px-3 py-2 text-sm ${
+                                        isMine
+                                          ? 'bg-primary text-primary-foreground rounded-br-sm'
+                                          : 'bg-secondary text-secondary-foreground rounded-bl-sm'
+                                      }`}
+                                    >
+                                      {msg.content}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+                        {storeUser ? (
+                          <div className="flex gap-2">
+                            <Input
+                              value={chatInput}
+                              onChange={(e) => setChatInput(e.target.value)}
+                              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                              placeholder="메시지를 입력하세요..."
+                              className="flex-1"
+                            />
+                            <Button size="icon" onClick={handleSendMessage} disabled={!chatInput.trim()}>
+                              <Send className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : null}
+                      </>
                     )}
                   </CardContent>
                 </Card>
               </TabsContent>
 
               <TabsContent value="map" className="mt-4">
-                <StudyMap location={study.location} />
+                {activeTab === 'map' && <StudyMap location={study.location} />}
               </TabsContent>
 
               {isHost && (
@@ -289,9 +420,13 @@ export default function StudyDetailPage({ params }: StudyDetailPageProps) {
                   <div>
                     <p className="font-medium text-foreground">기간</p>
                     <p className="text-sm text-muted-foreground">
-                      {format(new Date(study.startDate), 'yyyy.MM.dd', { locale: ko })}
-                      {study.endDate &&
+                      {study.startDate && !Number.isNaN(new Date(study.startDate).getTime())
+                        ? format(new Date(study.startDate), 'yyyy.MM.dd', { locale: ko })
+                        : study.startDate || '-'}
+                      {study.endDate && !Number.isNaN(new Date(study.endDate).getTime()) &&
                         ` - ${format(new Date(study.endDate), 'yyyy.MM.dd', { locale: ko })}`}
+                      {study.endDate && Number.isNaN(new Date(study.endDate).getTime()) &&
+                        ` - ${study.endDate}`}
                     </p>
                   </div>
                 </div>

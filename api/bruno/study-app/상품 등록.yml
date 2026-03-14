@@ -15,13 +15,15 @@ http:
     type: json
     data: |-
       {
-          "name": "React + Next.js 심화 스터디",
-          "content": "프론트엔드 개발자를 위한 React와 Next.js 심화 학습 스터디입니다. 매주 토요일 오후 2시에 모여서 공식 문서를 함께 읽고, 실습 프로젝트를 진행합니다. 기초 지식이 있으신 분들 환영합니다!",
+          "name": "AWS 자격증 준비 스터디",
+          "content":
+            "AWS Solutions Architect Associate 자격증 취득을 목표로 하는 스터디입니다. 공식 학습 자료와 모의고사를 함께 풀며 준비합니다.",
           "price": 0,
-          "quantity": 6,
+          "quantity": 4,
           "shippingFees": 0,
+          "mainImages": ["/images/aws-study.jpg"],
           "show": true,
-          "extra": { "category": "개발", "tags": ["React", "Next.js", "TypeScript"] }
+          "extra": { "category": "자격증", "tags": ["AWS", "Cloud"] }
       }
   auth: inherit
 

@@ -8,7 +8,7 @@ import { BookOpen, Plus, MessageCircle } from 'lucide-react';
 import useUserStore from '@/zustand/userStore';
 
 export function Header() {
-  const { user, resetUser } = useUserStore();
+  const { user, resetUser, hasHydrated } = useUserStore();
   const router = useRouter();
 
   const handleLogout = () => {
@@ -42,7 +42,16 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
-          {user ? (
+          {!hasHydrated ? (
+            <>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/login">로그인</Link>
+              </Button>
+              <Button asChild size="sm">
+                <Link href="/signup">회원가입</Link>
+              </Button>
+            </>
+          ) : user ? (
             <>
               <Button asChild size="sm" className="hidden sm:flex">
                 <Link href="/create">
@@ -60,12 +69,14 @@ export function Header() {
                   <MessageCircle className="h-5 w-5" />
                 </Link>
               </Button>
-              <Avatar className="h-9 w-9 border-2 border-border">
-                <AvatarImage src={user.image} alt={user.name} />
-                <AvatarFallback className="bg-secondary text-secondary-foreground">
-                  {user.name.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
+              <Link href="/mypage">
+                <Avatar className="h-9 w-9 border-2 border-border cursor-pointer">
+                  <AvatarImage src={user.image} alt={user.name} />
+                  <AvatarFallback className="bg-secondary text-secondary-foreground">
+                    {user.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 로그아웃
               </Button>

@@ -17,6 +17,8 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useStudy } from '@/lib/study-context';
+import { fetchProductByIdAPI } from '@/lib/study-api';
+import type { Study } from '@/lib/types';
 import { STUDY_CATEGORIES, POPULAR_TAGS } from '@/lib/types';
 import { ArrowLeft, MapPin, X } from 'lucide-react';
 import Link from 'next/link';
@@ -37,8 +39,20 @@ interface EditStudyPageProps {
 export default function EditStudyPage({ params }: EditStudyPageProps) {
   const { id } = params;
   const router = useRouter();
-  const { getStudyById, updateStudy, currentUser } = useStudy();
-  const study = getStudyById(id);
+  const { getStudyById, updateStudy, currentUser, accessToken } = useStudy();
+  const [study, setStudy] = useState<Study | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetchProductByIdAPI(id, accessToken).then((apiStudy) => {
+      if (cancelled) return;
+      setStudy(apiStudy ?? getStudyById(id) ?? null);
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [id, accessToken, getStudyById]);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -65,6 +79,17 @@ export default function EditStudyPage({ params }: EditStudyPageProps) {
     setLocationIndex(locIdx !== -1 ? locIdx.toString() : '0');
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [study?.id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-16 text-center">
+          <p className="text-muted-foreground">로딩 중...</p>
+        </main>
+      </div>
+    );
+  }
 
   if (!study) {
     return (

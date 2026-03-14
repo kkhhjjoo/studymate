@@ -11,7 +11,7 @@ import {
 import type { Study, Participant, ChatMessage } from './types';
 import type { User } from '@/types/user';
 import { initialStudies, initialMessages } from './mock-data';
-import { createStudyAPI, updateStudyAPI, deleteStudyAPI } from './study-api';
+import { createStudyAPI, updateStudyAPI, deleteStudyAPI, fetchProductsAPI } from './study-api';
 import useUserStore from '@/zustand/userStore';
 
 interface StudyContextType {
@@ -22,7 +22,7 @@ interface StudyContextType {
   messages: ChatMessage[];
   addStudy: (
     study: Omit<Study, 'id' | 'createdAt' | 'currentMembers' | 'participants'>,
-  ) => Promise<void>;
+  ) => Promise<{ success: boolean; savedToApi: boolean; id: string }>;
   updateStudy: (id: string, updates: Partial<Study>) => void;
   deleteStudy: (id: string) => void;
   applyToStudy: (studyId: string, message: string) => void;
@@ -45,24 +45,47 @@ export function StudyProvider({ children }: { children: ReactNode }) {
 
   const accessToken = storeUser?.token?.accessToken ?? '';
   const setAccessToken = () => {}; // kept for interface compatibility
-  const [studies, setStudies] = useState<Study[]>(() => {
-    if (typeof window === 'undefined') return initialStudies;
+  // 서버·클라이언트 첫 렌더를 동일하게 (하이드레이션 오류 방지)
+  const [studies, setStudies] = useState<Study[]>(initialStudies);
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+
+  // 마운트 후: 채팅은 localStorage 복원, 스터디는 localStorage 복원 후 API와 병합 (등록한 상품 유지)
+  useEffect(() => {
     try {
-      const saved = localStorage.getItem('studies');
-      return saved ? JSON.parse(saved) : initialStudies;
+      const savedMessages = localStorage.getItem('chat-messages');
+      if (savedMessages) {
+        const parsed = JSON.parse(savedMessages);
+        if (Array.isArray(parsed)) setMessages(parsed);
+      }
+      const savedStudies = localStorage.getItem('studies');
+      if (savedStudies) {
+        const parsed = JSON.parse(savedStudies);
+        if (Array.isArray(parsed) && parsed.length > 0) setStudies(parsed);
+      }
     } catch {
-      return initialStudies;
+      // ignore
     }
-  });
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    if (typeof window === 'undefined') return initialMessages;
-    try {
-      const saved = localStorage.getItem('chat-messages');
-      return saved ? JSON.parse(saved) : initialMessages;
-    } catch {
-      return initialMessages;
-    }
-  });
+
+    fetchProductsAPI(accessToken).then((apiStudies) => {
+      let local: Study[] = [];
+      try {
+        const s = localStorage.getItem('studies');
+        if (s) {
+          const p = JSON.parse(s);
+          if (Array.isArray(p)) local = p;
+        }
+      } catch {
+        // ignore
+      }
+      if (apiStudies.length > 0) {
+        const apiIds = new Set(apiStudies.map((s) => s.id));
+        const localOnly = local.filter((s) => !apiIds.has(s.id));
+        setStudies([...apiStudies, ...localOnly]);
+      } else if (local.length > 0) {
+        setStudies(local);
+      }
+    });
+  }, [accessToken]);
 
   useEffect(() => {
     localStorage.setItem('studies', JSON.stringify(studies));
@@ -78,12 +101,19 @@ export function StudyProvider({ children }: { children: ReactNode }) {
         Study,
         'id' | 'createdAt' | 'currentMembers' | 'participants'
       >,
-    ) => {
+    ): Promise<{ success: boolean; savedToApi: boolean; id: string }> => {
       let id = `study-${Date.now()}`;
+      let savedToApi = false;
 
       if (accessToken) {
         const result = await createStudyAPI(studyData, accessToken);
-        if (result) id = result.id;
+        if (result) {
+          id = result.id;
+          savedToApi = true;
+          const apiStudies = await fetchProductsAPI(accessToken);
+          setStudies(apiStudies);
+          return { success: true, savedToApi: true, id };
+        }
       }
 
       const newStudy: Study = {
@@ -94,6 +124,7 @@ export function StudyProvider({ children }: { children: ReactNode }) {
         participants: [],
       };
       setStudies((prev) => [newStudy, ...prev]);
+      return { success: true, savedToApi: false, id };
     },
     [accessToken],
   );

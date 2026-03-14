@@ -12,8 +12,8 @@ export async function getMyRoom() {
     requireAuth: true,
     headers: {
       'Content-Type': 'application/json',
-      'Client-Id': CLIENT_ID,
-    },
+      ...(CLIENT_ID ? { 'Client-Id': CLIENT_ID } : {}),
+    } as HeadersInit,
   });
   const data: ChatRoomInfoRes | ErrorRes = await res.json();
   if (!data.ok) throw new Error(data.message);
@@ -36,8 +36,8 @@ export async function getRoomInfo({
       requireAuth: true,
       headers: {
         'Content-Type': 'application/json',
-        'Client-Id': CLIENT_ID,
-      },
+        ...(CLIENT_ID ? { 'Client-Id': CLIENT_ID } : {}),
+      } as HeadersInit,
     },
   );
 
