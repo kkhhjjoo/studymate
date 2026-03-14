@@ -41,13 +41,14 @@ export function StudyCard({ study, accessToken }: StudyCardProps) {
 
   return (
     <Card
-      className="group h-full transition-all duration-200 hover:shadow-lg hover:border-primary/30 cursor-pointer"
+      className="group h-full transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/40 hover:-translate-y-1 cursor-pointer overflow-hidden"
       onClick={() => router.push(`/study/${study.id}`)}
     >
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 relative">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-accent to-primary opacity-0 group-hover:opacity-100 transition-opacity" />
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-3">
               <Badge
                 variant={study.isClosed ? 'secondary' : isFull ? 'outline' : 'default'}
                 className={
@@ -55,43 +56,45 @@ export function StudyCard({ study, accessToken }: StudyCardProps) {
                     ? 'bg-muted text-muted-foreground'
                     : isFull
                     ? 'border-amber-500 text-amber-600 bg-amber-50'
-                    : ''
+                    : 'bg-primary text-primary-foreground shadow-sm'
                 }
               >
                 {study.isClosed ? '모집 마감' : isFull ? '인원 마감' : '모집중'}
               </Badge>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-accent/50 text-accent bg-accent/5">
                 {study.category}
               </Badge>
             </div>
-            <h3 className="font-semibold text-lg leading-tight text-primary transition-colors line-clamp-2">
+            <h3 className="font-bold text-lg leading-tight text-foreground group-hover:text-primary transition-colors line-clamp-2">
               {study.title}
             </h3>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="pb-3">
-        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+      <CardContent className="pb-4">
+        <p className="text-sm text-muted-foreground line-clamp-2 mb-4 leading-relaxed">
           {study.description}
         </p>
 
-        <div className="flex flex-wrap gap-1.5 mb-4">
+        <div className="flex flex-wrap gap-1.5 mb-5">
           {study.tags.slice(0, 3).map((tag) => (
-            <Badge key={tag} variant="secondary" className="text-xs font-normal bg-secondary/70 text-secondary-foreground border-0 rounded-full px-2.5">
-              {tag}
+            <Badge key={tag} variant="secondary" className="text-xs font-medium bg-primary/5 text-primary/80 border-0 rounded-full px-3 py-0.5">
+              #{tag}
             </Badge>
           ))}
           {study.tags.length > 3 && (
-            <Badge variant="secondary" className = "text-xs font-normal bg-secondary/70 text-secondary-foreground border-0 rounded-full px-2.5">
+            <Badge variant="secondary" className="text-xs font-medium bg-muted text-muted-foreground border-0 rounded-full px-3 py-0.5">
               +{study.tags.length - 3}
             </Badge>
           )}
         </div>
 
-        <div className="space-y-2 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 shrink-0 text-accent" />
+        <div className="space-y-2.5 text-sm">
+          <div className="flex items-center gap-2.5 text-muted-foreground">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10">
+              <Calendar className="h-3.5 w-3.5 text-accent" />
+            </div>
             <span className="truncate">
               {study.schedule ||
                 (study.startDate && !Number.isNaN(new Date(study.startDate).getTime())
@@ -100,26 +103,28 @@ export function StudyCard({ study, accessToken }: StudyCardProps) {
                 '-'}
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 shrink-0" />
+          <div className="flex items-center gap-2.5 text-muted-foreground">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+              <MapPin className="h-3.5 w-3.5 text-primary" />
+            </div>
             <span className="truncate">{study.location.name}</span>
           </div>
         </div>
       </CardContent>
 
-      <CardFooter className="pt-4 border-t border-border/50 bg-secondary/20">
+      <CardFooter className="pt-4 border-t border-border/30 bg-muted/30">
         <div className="flex w-full items-center justify-between">
           <div className="flex items-center gap-2">
             {accessToken && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="flex items-center gap-2.5 rounded-full px-2 py-1 hover:bg-secondary transition-colors"
+                className="h-8 w-8 rounded-full hover:bg-primary/10 transition-all hover:scale-110"
                 onClick={handleBookmark}
                 disabled={isBookmarking || isBookmarked}
               >
                 <Heart
-                  className={`h-4 w-4 ${isBookmarked ? 'fill-red-500 text-red-500' : ''}`}
+                  className={`h-4 w-4 transition-colors ${isBookmarked ? 'fill-red-500 text-red-500' : 'text-muted-foreground hover:text-primary'}`}
                 />
               </Button>
             )}
@@ -171,9 +176,9 @@ export function StudyCard({ study, accessToken }: StudyCardProps) {
           </Popover>
           </div>
 
-          <div className="flex items-center gap-1.5 text-sm">
-            <Users className="h-4 w-4 text-muted-foreground" />
-            <span className={isFull ? 'text-amber-600 font-medium' : 'text-muted-foreground'}>
+          <div className={`flex items-center gap-1.5 text-sm px-2.5 py-1 rounded-full ${isFull ? 'bg-amber-100 text-amber-700' : 'bg-primary/10 text-primary'}`}>
+            <Users className="h-3.5 w-3.5" />
+            <span className="font-medium">
               {study.currentMembers}/{study.maxMembers}
             </span>
           </div>
