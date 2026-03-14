@@ -1,14 +1,14 @@
 import type { Metadata } from 'next'
-import { Noto_Sans_KR } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { StudyProvider } from '@/lib/study-context'
 import GoogleAuthProvider from './GoogleAuthProvider'
 
-const notoSansKR = Noto_Sans_KR({ 
+const inter = Inter({ 
   subsets: ["latin"],
   weight: ['400', '500', '600', '700'],
-  variable: '--font-noto-sans-kr'
+  variable: '--font-inter'
 });
 
 export const metadata: Metadata = {
@@ -24,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className={`${notoSansKR.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} font-sans antialiased`}>
         <GoogleAuthProvider>
           <StudyProvider>
             {children}
