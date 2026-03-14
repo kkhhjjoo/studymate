@@ -3,6 +3,8 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Purple theme for Study App */
+
 :root {
   --background: #FAFAFF;
   --foreground: #1A1625;
