@@ -1,0 +1,18 @@
+info:
+  name: 회원가입
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{url}}/users/"
+  body:
+    type: json
+    data: ""
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

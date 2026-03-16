@@ -1,0 +1,25 @@
+info:
+  name: 로그인
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{url}}/users/login"
+  headers:
+    - name: Authorization
+      value: Bearer {{accessToken}}
+  body:
+    type: json
+    data: |-
+      {
+        "email": "khjoo1203@naver.com",
+        "password": "12345678"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

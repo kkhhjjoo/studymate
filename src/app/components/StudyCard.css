@@ -1,0 +1,221 @@
+/* StudyCard - 이미지와 동일한 카드 스타일 (흰 배경, 보라 악센트, 둥근 모서리) */
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #fff;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: var(--radius, 0.75rem);
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: var(--primary-light, #a78bfa);
+}
+
+/* Header: 태그 + 제목 */
+.header {
+  padding: 1rem 1rem 0.75rem;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-bottom: 0.5rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* 모집중: 보라 배경 + 흰 글씨 */
+.badgeOpen,
+[data-status="badgeOpen"] {
+  background: var(--primary, #7c3aed);
+  color: #fff;
+}
+
+/* 인원 마감: 연한 주황 톤 */
+.badgeFull,
+[data-status="badgeFull"] {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+/* 모집 마감: 회색 */
+.badgeClosed,
+[data-status="badgeClosed"] {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+/* 카테고리: 연보라 배경 + 보라 글씨 (이미지 두 번째 태그) */
+.category,
+.badgeCategory {
+  background: var(--primary-bg, #f5f3ff);
+  color: var(--primary, #7c3aed);
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.title {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #000;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.2s;
+}
+
+.card:hover .title {
+  color: var(--primary, #7c3aed);
+}
+
+/* Content: 설명, 키워드 태그, 일정/장소 */
+.content {
+  padding: 0 1rem 0.75rem;
+  flex: 1;
+}
+
+.description {
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #6b7280);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-bottom: 0.75rem;
+}
+
+.tag {
+  font-size: 0.75rem;
+  background: #f3f4f6;
+  color: #4b5563;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.metaItem span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Footer: 스터디장 + 북마크/인원 */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--border, #e5e7eb);
+  background: #fafafa;
+}
+
+.popoverWrap {
+  position: relative;
+}
+
+.hostBtn {
+  background: none;
+  border: none;
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #6b7280);
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  transition: background 0.15s;
+}
+
+.hostBtn:hover {
+  background: #f3f4f6;
+}
+
+.popover {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  background: #fff;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  padding: 0.25rem;
+  z-index: 10;
+  min-width: 130px;
+}
+
+.popoverItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.8125rem;
+  background: none;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  color: #374151;
+  transition: background 0.15s;
+}
+
+.popoverItem:hover {
+  background: #f3f4f6;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.members {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+.members span:first-child {
+  color: var(--primary, #7c3aed);
+}
+
+.membersFull {
+  color: #b45309;
+}

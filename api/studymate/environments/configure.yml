@@ -1,0 +1,6 @@
+name: configure
+variables:
+  - name: url
+    value: https://fesp-api.koyeb.app/market
+  - name: client-id
+    value: febc15-final12-ecad

@@ -1,6 +1,6 @@
 /* 사용자 정보 인터페이스 */
 export interface User {
-  _id: string;
+  _id: number;
   email: string;
   name: string;
   type: string;
