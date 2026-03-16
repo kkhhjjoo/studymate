@@ -53,11 +53,21 @@ export interface StudyCardData {
   hostId: string;
   hostName: string;
   category: string;
+  tags: string[];
   maxMembers: number;
   currentMembers: number;
   isClosed: boolean;
   description?: string;
+  schedule: string;
   startDate?: string;
-  location?: StudyLocation;
-  participants: { userId: string; status: 'pending' | 'approved' | 'rejected' }[];
+  endDate?: string;
+  location: StudyLocation;
+  participants: {
+    id: string;
+    userId: string;
+    userName: string;
+    status: 'pending' | 'approved' | 'rejected';
+    message: string;
+    appliedAt: string;
+  }[];
 }

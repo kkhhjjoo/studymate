@@ -1,12 +1,15 @@
 'use client';
 
-import type { Study, Participant } from '@/lib/types';
+import type { Participant } from '@/lib/types';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import './participant-manger.css';
+import './participant-manager.css';
 
 interface ParticipantManagerProps {
-  study: Study;
+  study: {
+    id: string | number;
+    participants: Pick<Participant, 'id' | 'userName' | 'status' | 'message' | 'appliedAt'>[];
+  };
   updateParticipantStatus: (studyId: string, participantId: string, status: 'approve' | 'rejected') => void;
 }
 

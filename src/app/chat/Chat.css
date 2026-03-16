@@ -1,0 +1,140 @@
+.pageWrapper {
+  min-height: 100vh;
+  background-color: var(--background);
+}
+
+.main {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pageTitleIcon {
+  height: 1.5rem;
+  width: 1.5rem;
+}
+
+/* 비로그인 / 빈 목록 안내 메시지 */
+.emptyMessage {
+  text-align: center;
+  color: #6b7280;
+  padding: 4rem 0;
+}
+
+.loginLink {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+/* 스터디 카드 목록 */
+.cardList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* 카드 */
+.card {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  background-color: #ffffff;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.card:hover {
+  border-color: var(--primary, #6366f1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* 카드 내부 레이아웃 */
+.cardContent {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+}
+
+/* 아바타 */
+.avatar {
+  height: 2.75rem;
+  width: 2.75rem;
+  border-radius: 50%;
+  background-color: #ede9fe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.avatarFallback {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--primary, #6366f1);
+}
+
+/* 텍스트 영역 */
+.cardBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.studyTitle {
+  font-weight: 500;
+  color: #111827;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 카테고리 뱃지 */
+.categoryBadge {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  border-radius: 9999px;
+  padding: 0.1rem 0.5rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.lastMessage {
+  font-size: 0.875rem;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 메시지 수 뱃지 */
+.countBadge {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: #f3f4f6;
+  color: #374151;
+  border-radius: 9999px;
+  padding: 0.15rem 0.55rem;
+  min-width: 1.5rem;
+  text-align: center;
+}
