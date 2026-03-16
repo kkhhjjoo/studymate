@@ -5,9 +5,9 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { IoIosTrendingUp } from 'react-icons/io';
 import { LuUsers } from 'react-icons/lu';
-import Header from '@/app/components/Header';
+import Header from '@/app/components/Header/Header';
 import SideBar from '@/app/components/SideBar';
-import StudyCard from '@/app/components/StudyCard';
+import StudyCard from '@/app/components/StudyCard/StudyCard';
 import { fetchProductsAPI } from '@/lib/study';
 import useUserStore from '@/zustand/userStore';
 import type { Study } from '@/types/studies';
@@ -49,12 +49,7 @@ export default function Home() {
     if (filters.tag) list = list.filter((s) => s.extra?.tags?.includes(filters.tag));
     if (filters.search) {
       const q = filters.search.toLowerCase();
-      list = list.filter((s) =>
-        s.name?.toLowerCase().includes(q) ||
-        s.content?.toLowerCase().includes(q) ||
-        s.extra?.category?.toLowerCase().includes(q) ||
-        s.extra?.tags?.some((t) => t.toLowerCase().includes(q))
-      );
+      list = list.filter((s) => s.name?.toLowerCase().includes(q) || s.content?.toLowerCase().includes(q) || s.extra?.category?.toLowerCase().includes(q) || s.extra?.tags?.some((t) => t.toLowerCase().includes(q)));
     }
     return list;
   }, [studies, filters.recruitmentStatus, filters.tag, filters.search]);
@@ -79,58 +74,55 @@ export default function Home() {
               </div>
             </div>
 
-          <div className="stat-card">
-            <div className="icon">
-              <IoIosTrendingUp />
+            <div className="stat-card">
+              <div className="icon">
+                <IoIosTrendingUp />
+              </div>
+              <div>
+                <p className="stat-number">{stats.open}</p>
+                <p className="stat-label">모집중</p>
+              </div>
             </div>
-            <div>
-              <p className="stat-number">{stats.open}</p>
-              <p className="stat-label">모집중</p>
-            </div>
-          </div>
 
-          <div className="stat-card">
-            <div className="icon">
-              <LuUsers />
-            </div>
-            <div>
-              <p className="stat-number">{stats.members}</p>
-              <p className="stat-label">참여 인원</p>
+            <div className="stat-card">
+              <div className="icon">
+                <LuUsers />
+              </div>
+              <div>
+                <p className="stat-number">{stats.members}</p>
+                <p className="stat-label">참여 인원</p>
+              </div>
             </div>
           </div>
-        </div>
         </section>
 
         <div className="layout">
-          <SideBar
-            filters={filters}
-            onFilterChanges={(key, value) => setFilters((prev) => ({ ...prev, [key]: value }))}
-          />
+          <SideBar filters={filters} onFilterChanges={(key, value) => setFilters((prev) => ({ ...prev, [key]: value }))} />
           <section className="content">
-          <div className="content-header">
-            <h2>
-              스터디 목록 <span className="study-count">{filteredStudies.length}개</span>
-            </h2>
-          </div>
+            <div className="content-header">
+              <h2>
+                스터디 목록 <span className="study-count">{filteredStudies.length}개</span>
+              </h2>
+            </div>
 
-          {filteredStudies.length === 0 ? (
-            <div className="empty-box">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M12 7v14"></path>
-                <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path>
-              </svg>
-              <p>
-                조건에 맞는 스터디가 없습니다. <br />
-                필터를 조정하거나 새로운 스터디를 만들어보세요.
-              </p>
-            </div>
-          ) : (
-            <div className="grid">
-              {filteredStudies.map((study) => (
-                <StudyCard key={study.seller_id ?? study._id ?? study.name} study={study} accessToken={accessToken || undefined} />
-              ))}
-            </div>
-          )}
+            {filteredStudies.length === 0 ? (
+              <div className="empty-box">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 7v14"></path>
+                  <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path>
+                </svg>
+                <p>
+                  조건에 맞는 스터디가 없습니다. <br />
+                  필터를 조정하거나 새로운 스터디를 만들어보세요.
+                </p>
+              </div>
+            ) : (
+              <div className="grid">
+                {filteredStudies.map((study) => (
+                  <StudyCard key={study.seller_id ?? study._id ?? study.name} study={study} accessToken={accessToken || undefined} />
+                ))}
+              </div>
+            )}
           </section>
         </div>
       </main>

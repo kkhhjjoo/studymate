@@ -67,7 +67,7 @@ export default function BookmarkButton({ studyId, width = 20, height = 20, deskt
 
   return (
     <button type="button" className="bookmark-btn" style={cssVars} onClick={handleClick} aria-label={currentBookmark ? '북마크 해제' : '북마크 추가'}>
-      {currentBookmark ? <FaRegHeart /> : <FaHeart />}
+      {currentBookmark ? <FaHeart className="bookmark-on" /> : <FaRegHeart className="bookmark-off" />}
     </button>
   );
 }

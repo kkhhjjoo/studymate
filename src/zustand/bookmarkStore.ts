@@ -48,11 +48,13 @@ const BookmarkStore: StateCreator<BookmarkStoreState> = (set, get) => ({
     })),
 
   isBookmarked: (targetId) => {
-    return get().bookmarks.some((bookmark) => bookmark.product._id === targetId);
+    const id = Number(targetId);
+    return get().bookmarks.some((bookmark) => Number(bookmark.product?._id ?? bookmark.product?.id) === id);
   },
 
   getBookmarkId: (targetId) => {
-    const bookmark = get().bookmarks.find((b) => b.product._id === targetId);
+    const id = Number(targetId);
+    const bookmark = get().bookmarks.find((b) => Number(b.product?._id ?? b.product?.id) === id);
     return bookmark ? bookmark._id : null;
   },
 

@@ -2,12 +2,15 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { FaPlus } from 'react-icons/fa6';
-import { IoMdNotificationsOutline } from 'react-icons/io';
+import { IoChatbubbleOutline } from 'react-icons/io5';
 import { IoSearchOutline } from 'react-icons/io5';
+import { useState } from 'react';
 import useUserStore from '@/zustand/userStore';
 import './Header.css';
+
+const DEFAULT_AVATAR_PATH = '/default-image.jpg';
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
@@ -16,7 +19,9 @@ interface HeaderProps {
 export default function Header({ onSearch }: HeaderProps) {
   const { user, resetUser, hasHydrated } = useUserStore();
   const router = useRouter();
-  const pathname = usePathname();
+  const [avatarError, setAvatarError] = useState(false);
+  const avatarSrc = user?.image?.trim() || DEFAULT_AVATAR_PATH;
+  const isExternalAvatar = avatarSrc.startsWith('http');
 
   const handleLogout = () => {
     resetUser();
@@ -58,11 +63,30 @@ export default function Header({ onSearch }: HeaderProps) {
                 스터디 만들기
               </Link>
               <button type="button" className="app-header-notification" aria-label="알림">
-                <IoMdNotificationsOutline size={20} />
+                <IoChatbubbleOutline size={20} />
                 <span className="app-header-notification-dot" aria-hidden="true" />
               </button>
-              <Link href="/mypage" className="app-header-avatar" aria-label="마이페이지">
-                {user.image ? <Image src={user.image} alt="" width={40} height={40} /> : <span>{initial}</span>}
+              <Link href="/mypage" className="app-header-avatar" aria-label="마이페이지" key={user?._id ?? 'default'}>
+                {avatarError ? (
+                  <span className="app-header-avatar-initial">{initial}</span>
+                ) : isExternalAvatar ? (
+                  <Image
+                    src={avatarSrc}
+                    alt="프로필"
+                    width={40}
+                    height={40}
+                    onError={() => setAvatarError(true)}
+                  />
+                ) : (
+                  <Image
+                    src={DEFAULT_AVATAR_PATH}
+                    alt="기본 프로필"
+                    width={40}
+                    height={40}
+                    unoptimized
+                    onError={() => setAvatarError(true)}
+                  />
+                )}
               </Link>
               <button type="button" className="app-header-logout" onClick={handleLogout}>
                 로그아웃

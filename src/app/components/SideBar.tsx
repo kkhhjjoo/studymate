@@ -1,4 +1,4 @@
-import StudyFilter from '@/app/components/StudyFilter';
+import StudyFilter from '@/app/components/StudyFilter/StudyFilter';
 import React, { useState } from 'react';
 
 interface SideBarProps {
@@ -10,9 +10,7 @@ const SideBar = ({ filters: controlledFilters, onFilterChanges: controlledOnFilt
   const [localFilters, setLocalFilters] = useState<Record<string, string>>({});
 
   const filters = controlledFilters ?? localFilters;
-  const setFilters = controlledOnFilterChange
-    ? (key: string, value: string) => controlledOnFilterChange(key, value)
-    : (key: string, value: string) => setLocalFilters((prev) => ({ ...prev, [key]: value }));
+  const setFilters = controlledOnFilterChange ? (key: string, value: string) => controlledOnFilterChange(key, value) : (key: string, value: string) => setLocalFilters((prev) => ({ ...prev, [key]: value }));
 
   const onFilterChanges = (key: string, value: string) => {
     setFilters(key, value);

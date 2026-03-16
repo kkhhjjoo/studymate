@@ -1,19 +1,13 @@
-/**
- * Login.tsx
- * 로그인 페이지의 핵심 컴포넌트.
- * 이메일/비밀번호 로그인과 구글 OAuth 로그인을 모두 처리하며,
- * 백엔드 API와 통신해 JWT 토큰을 받아 Zustand 스토어에 저장한다.
- */
-
-'use client'
+'use client';
 
 import type { User } from '@/types/user';
 import useUserStore from '@/zustand/userStore';
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useRouter } from 'next/navigation';
 import { type ChangeEvent, useEffect, useState } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import './Login.css';
 
 /** 환경변수: API 서버 주소와 클라이언트 식별자 */
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
@@ -63,22 +57,10 @@ function parseLoginResponse(data: Record<string, unknown>, credential: string): 
   const token = (data.token ?? item?.token) as Record<string, unknown> | undefined;
 
   // accessToken: 다양한 키 이름을 순서대로 탐색
-  const accessToken =
-    (token?.accessToken as string) ??
-    (token?.access_token as string) ??
-    (data.accessToken as string) ??
-    (data.access_token as string) ??
-    (item?.accessToken as string) ??
-    (item?.access_token as string);
+  const accessToken = (token?.accessToken as string) ?? (token?.access_token as string) ?? (data.accessToken as string) ?? (data.access_token as string) ?? (item?.accessToken as string) ?? (item?.access_token as string);
 
   // refreshToken: 다양한 키 이름을 순서대로 탐색
-  const refreshToken =
-    (token?.refreshToken as string) ??
-    (token?.refresh_token as string) ??
-    (data.refreshToken as string) ??
-    (data.refresh_token as string) ??
-    (item?.refreshToken as string) ??
-    (item?.refresh_token as string);
+  const refreshToken = (token?.refreshToken as string) ?? (token?.refresh_token as string) ?? (data.refreshToken as string) ?? (data.refresh_token as string) ?? (item?.refreshToken as string) ?? (item?.refresh_token as string);
 
   const providerAccountId = (item?.providerAccountId ?? item?.provider_account_id ?? item?.sub ?? data.providerAccountId) as string | undefined;
 
@@ -113,7 +95,7 @@ const Login = () => {
   const { setUser, hasHydrated, user } = useUserStore();
   const router = useRouter();
   const [formData, setFormData] = useState({ email: '', password: '' });
-  const [isSubmitting, setIsSubmitting] = useState(false);       // 이메일 로그인 제출 중 여부
+  const [isSubmitting, setIsSubmitting] = useState(false); // 이메일 로그인 제출 중 여부
   const [isGoogleLoading, setIsGoogleLoading] = useState(false); // 구글 로그인 처리 중 여부
 
   // 이미 로그인된 상태라면 메인 페이지로 리다이렉트
@@ -228,7 +210,9 @@ const Login = () => {
         // 서버 검증 오류 메시지 조합
         let msg = data.message ?? '로그인에 실패했습니다.';
         if (data.errors && typeof data.errors === 'object') {
-          const msgs = Object.values(data.errors).map((e) => (e as { msg?: string })?.msg).filter(Boolean) as string[];
+          const msgs = Object.values(data.errors)
+            .map((e) => (e as { msg?: string })?.msg)
+            .filter(Boolean) as string[];
           if (msgs.length) msg = msgs.join(', ');
         }
         throw new Error(msg);
@@ -242,50 +226,32 @@ const Login = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#FAFAFF] flex items-center justify-center px-4">
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '';
+  const content = (
+    <div className="container">
       <ToastContainer />
-      <div className="w-full max-w-md">
-        <form onSubmit={handleSubmit} className="space-y-5">
-
+      <div className="wrapper">
+        <form onSubmit={handleSubmit} className="form">
           {/* 이메일 */}
           <div>
-            <label className="block text-sm font-medium text-gray-800 mb-1">Email address</label>
-            <input
-              type="email"
-              name="email"
-              placeholder="Enter email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-500 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
-            />
+            <label className="label">이메일</label>
+            <input type="email" name="email" placeholder="이메일" value={formData.email} onChange={handleChange} className="input" />
           </div>
 
           {/* 비밀번호 */}
           <div>
-            <label className="block text-sm font-medium text-gray-800 mb-1">Password</label>
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-500 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
-            />
+            <label className="fieldGroup">비밀번호</label>
+            <input type="password" name="password" placeholder="비밀번호" value={formData.password} onChange={handleChange} className="input" />
           </div>
 
           {/* 로그인 버튼 + 회원가입 링크 */}
-          <div className="flex items-center justify-between pt-1">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-8 py-3 bg-[#C0392B] text-white font-semibold rounded-lg hover:bg-[#A93226] disabled:opacity-60 transition-colors"
-            >
+          <div className="formButton">
+            <button type="submit" disabled={isSubmitting} className="submitButton">
               {isSubmitting ? '로그인 중...' : 'Login'}
             </button>
-            <p className="text-sm text-gray-600">
+            <p className="signupText">
               아직 계정이 없으세요?{' '}
-              <a href="/signup" className="text-blue-500 hover:underline">
+              <a href="/signup" className="signupLink">
                 회원가입 하기
               </a>
             </p>
@@ -293,13 +259,11 @@ const Login = () => {
         </form>
 
         {/* 구글 로그인 */}
-        <div className="mt-8">
-          <p className="text-center text-sm text-gray-500 mb-4">- 또는 -</p>
-          {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? (
-            <div className="flex flex-col items-center gap-3">
-              {isGoogleLoading && (
-                <p className="text-sm text-gray-500">구글 로그인 중...</p>
-              )}
+        <div className="divider">
+          <p className="dividerText">- 또는 -</p>
+          {clientId ? (
+            <div className="googleWrapper">
+              {isGoogleLoading && <p className="googleLoadingText">구글 로그인 중...</p>}
               {/* 구글 OAuth 로그인 버튼 */}
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
@@ -311,14 +275,14 @@ const Login = () => {
             </div>
           ) : (
             // 환경변수 미설정 시 안내 메시지 표시
-            <p className="text-center text-sm text-gray-500">
-              Google 로그인을 사용하려면 .env에 NEXT_PUBLIC_GOOGLE_CLIENT_ID를 설정해주세요.
-            </p>
+            <p className="googleEnvNotice">Google 로그인을 사용하려면 .env에 NEXT_PUBLIC_GOOGLE_CLIENT_ID를 설정해주세요.</p>
           )}
         </div>
       </div>
     </div>
   );
+
+  return clientId ? <GoogleOAuthProvider clientId={clientId}>{content}</GoogleOAuthProvider> : content;
 };
 
 export default Login;

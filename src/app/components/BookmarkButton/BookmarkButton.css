@@ -1,0 +1,12 @@
+button {
+  background-color: transparent;
+  outline: none;
+  border: none;
+}
+
+.bookmark-off {
+  color: red;
+}
+.bookmark-on {
+  color: red;
+}

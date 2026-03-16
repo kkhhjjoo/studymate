@@ -1,17 +1,9 @@
-/**
- * SignUp.tsx
- * 회원가입 폼 컴포넌트.
- * 이메일/닉네임 중복 확인, 비밀번호 일치 검증 후 백엔드 API에 회원 등록 요청을 보낸다.
- * 가입 성공 시 /login 페이지로 이동한다.
- */
-
-'use client'
+'use client';
 
 import useUserStore from '@/zustand/userStore';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
-
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const CLIENT_ID = process.env.NEXT_PUBLIC_CLIENT_ID;
@@ -21,8 +13,6 @@ const SignUp = () => {
   const accessToken = user?.token?.accessToken;
   const hasHydrated = useUserStore((state) => state.hasHydrated);
   const router = useRouter();
-
-
 
   useEffect(() => {
     if (hasHydrated && accessToken) {
@@ -41,7 +31,7 @@ const SignUp = () => {
     region: '',
     age: '',
     gender: '',
-    image: '/images/default-image.jpg'
+    image: '/images/default-image.jpg',
   });
 
   //중복 확인 상태 추가
@@ -59,28 +49,26 @@ const SignUp = () => {
     region: '',
     age: '',
     gender: '',
-    image: '/images/default-image.jpg'
+    image: '/images/default-image.jpg',
   });
 
   //성공 상태
   const [successMessages, setSuccessMessages] = useState({
     email: '',
-    name: ''
-  })
+    name: '',
+  });
 
   //이메일 중복확인
   const checkEmailDuplicate = async () => {
-    if (!formData.email) { 
+    if (!formData.email) {
       setErrors({ ...errors, email: '이메일을 입력해주세요' });
       return;
     }
 
     //이메일 정규식
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailRegex.test(formData.email)) { 
-      setErrors({ ...errors, email: '올바른 이메일 형식이 아닙니다.' }
-      
-      );
+    if (!emailRegex.test(formData.email)) {
+      setErrors({ ...errors, email: '올바른 이메일 형식이 아닙니다.' });
       return;
     }
     try {
@@ -89,8 +77,8 @@ const SignUp = () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Client-Id': CLIENT_ID!
-        }
+          'Client-Id': CLIENT_ID!,
+        },
       });
       const data = await res.json();
 
@@ -106,7 +94,6 @@ const SignUp = () => {
 
           setErrors({ ...errors, email: '이미 존재하는 이메일 입니다.' });
           setSuccessMessages({ ...successMessages, email: '' });
-
         } else {
           throw new Error(data.message || '이메일 확인 실패');
           //다른 에러가 뜬 경우 예상못한 에러를 catch로 보냄
@@ -119,29 +106,27 @@ const SignUp = () => {
         setCheckStatus({ ...checkStatus, email: true });
         setErrors({ ...errors, email: '' });
         setSuccessMessages({ ...successMessages, email: '중복 확인 완료' });
-        
       } else {
         setCheckStatus({ ...checkStatus, email: false });
         setErrors({ ...errors, email: data.message || '사용할 수 없는 이메일입니다.' });
         setSuccessMessages({ ...successMessages, email: '' });
       }
-    } catch (error) { 
+    } catch (error) {
       console.error(error);
       setCheckStatus({ ...checkStatus, email: false });
       setErrors({ ...errors, email: '이메일 중복확인에 실패했습니다.' });
       setSuccessMessages({ ...successMessages, email: '' });
     }
-  }
-  
+  };
+
   //이름 중복확인
-  const checkNameDuplicate = async () => { 
-    if (!formData.name) { 
+  const checkNameDuplicate = async () => {
+    if (!formData.name) {
       setErrors({ ...errors, name: '이름을 입력해주세요.' });
       return;
     }
-    if (formData.name.length < 2 || formData.name.length > 6) { 
-      setErrors({ ...errors, name: '이름은 2~6글자로 입력해주세요' }
-      );
+    if (formData.name.length < 2 || formData.name.length > 6) {
+      setErrors({ ...errors, name: '이름은 2~6글자로 입력해주세요' });
       return;
     }
     try {
@@ -149,30 +134,30 @@ const SignUp = () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Client-Id': CLIENT_ID!
+          'Client-Id': CLIENT_ID!,
         },
       });
       const data = await res.json();
 
-      if (data.ok === 1) { 
+      if (data.ok === 1) {
         setCheckStatus({ ...checkStatus, name: true });
         setErrors({ ...errors, name: '' });
-        setSuccessMessages({...successMessages, name: '중복확인 완료'})
-      } else if (res.status === 409 ) {
+        setSuccessMessages({ ...successMessages, name: '중복확인 완료' });
+      } else if (res.status === 409) {
         setCheckStatus({ ...checkStatus, name: false });
         setErrors({ ...errors, name: '이미 존재하는 이름입니다.' });
         setSuccessMessages({ ...successMessages, name: '' });
-       }
-    } catch (error) { 
+      }
+    } catch (error) {
       console.error(error);
-      toast.error('중복확인에 실패했습니다.')
+      toast.error('중복확인에 실패했습니다.');
     }
-  }
+  };
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setData({ ...formData, [name]: value });
     //해당 필드 에러 지우기
-    setErrors({ ...errors, [name]: ''});
+    setErrors({ ...errors, [name]: '' });
   };
 
   //회원가입 제출
@@ -231,24 +216,12 @@ const SignUp = () => {
       <ToastContainer />
       <div className="w-full max-w-md">
         <form onSubmit={handleSubmit} className="space-y-5">
-
           {/* 이메일 */}
           <div>
             <label className="block text-sm font-medium text-gray-800 mb-1">Email address</label>
             <div className="flex gap-2">
-              <input
-                type="email"
-                name="email"
-                placeholder="Enter email"
-                value={formData.email}
-                onChange={handleChange}
-                className="flex-1 border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-500 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
-              />
-              <button
-                type="button"
-                onClick={checkEmailDuplicate}
-                className="px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 whitespace-nowrap"
-              >
+              <input type="email" name="email" placeholder="Enter email" value={formData.email} onChange={handleChange} className="flex-1 border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-500 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300" />
+              <button type="button" onClick={checkEmailDuplicate} className="px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 whitespace-nowrap">
                 중복확인
               </button>
             </div>
@@ -259,14 +232,7 @@ const SignUp = () => {
           {/* 비밀번호 */}
           <div>
             <label className="block text-sm font-medium text-gray-800 mb-1">Password</label>
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-500 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
-            />
+            <input type="password" name="password" placeholder="Password" value={formData.password} onChange={handleChange} className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-500 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300" />
             {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
           </div>
 
@@ -288,19 +254,8 @@ const SignUp = () => {
           <div>
             <label className="block text-sm font-medium text-gray-800 mb-1">name</label>
             <div className="flex gap-2">
-              <input
-                type="text"
-                name="name"
-                placeholder="Name"
-                value={formData.name}
-                onChange={handleChange}
-                className="flex-1 border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-500 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
-              />
-              <button
-                type="button"
-                onClick={checkNameDuplicate}
-                className="px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 whitespace-nowrap"
-              >
+              <input type="text" name="name" placeholder="Name" value={formData.name} onChange={handleChange} className="flex-1 border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-500 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300" />
+              <button type="button" onClick={checkNameDuplicate} className="px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 whitespace-nowrap">
                 중복확인
               </button>
             </div>
@@ -311,37 +266,18 @@ const SignUp = () => {
           {/* 지역 */}
           <div>
             <label className="block text-sm font-medium text-gray-800 mb-1">Region</label>
-            <input
-              type="text"
-              name="region"
-              placeholder="Region"
-              value={formData.region}
-              onChange={handleChange}
-              className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-500 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
-            />
+            <input type="text" name="region" placeholder="Region" value={formData.region} onChange={handleChange} className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-500 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300" />
           </div>
 
           {/* 나이 / 성별 */}
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-800 mb-1">Age</label>
-              <input
-                type="number"
-                name="age"
-                placeholder="Age"
-                value={formData.age}
-                onChange={handleChange}
-                className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-500 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
-              />
+              <input type="number" name="age" placeholder="Age" value={formData.age} onChange={handleChange} className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-500 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300" />
             </div>
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-800 mb-1">Gender</label>
-              <select
-                name="gender"
-                value={formData.gender}
-                onChange={handleChange}
-                className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-300"
-              >
+              <select name="gender" value={formData.gender} onChange={handleChange} className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-300">
                 <option value="">Select</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
@@ -351,11 +287,7 @@ const SignUp = () => {
 
           {/* 제출 버튼 + 로그인 링크 */}
           <div className="flex items-center justify-between pt-1">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-8 py-3 bg-[#7C3AED] text-white font-semibold rounded-lg hover:bg-[#5B21B6] disabled:opacity-60 transition-colors"
-            >
+            <button type="submit" disabled={isSubmitting} className="px-8 py-3 bg-[#7C3AED] text-white font-semibold rounded-lg hover:bg-[#5B21B6] disabled:opacity-60 transition-colors">
               {isSubmitting ? '처리중...' : 'Sign Up'}
             </button>
             <p className="text-sm text-gray-600">
@@ -365,11 +297,10 @@ const SignUp = () => {
               </a>
             </p>
           </div>
-
         </form>
       </div>
     </div>
   );
-}
+};
 
-export default SignUp
+export default SignUp;

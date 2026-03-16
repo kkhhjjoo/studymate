@@ -8,7 +8,7 @@ import { IoChatboxOutline } from 'react-icons/io5';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
-import BookmarkButton from '@/app/components/BookmarkButton';
+import BookmarkButton from '@/app/components/BookmarkButton/BookmarkButton';
 
 interface StudyCardProps {
   study: Study;
