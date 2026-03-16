@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import './StudyCard.css';
 import { Study } from '@/types/studies';
-import { FaRegCalendarAlt, FaUser, FaRegHeart } from 'react-icons/fa';
+import { FaRegCalendarAlt, FaUser } from 'react-icons/fa';
 import { IoChatboxOutline } from 'react-icons/io5';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -15,7 +15,7 @@ interface StudyCardProps {
   accessToken?: string;
 }
 
-export default function StudyCard({ study, accessToken }: StudyCardProps) {
+export default function StudyCard({ study }: StudyCardProps) {
   const router = useRouter();
   const [popoverOpen, setPopoverOpen] = useState(false);
 
@@ -109,12 +109,10 @@ export default function StudyCard({ study, accessToken }: StudyCardProps) {
           )}
         </div>
         {/* 북마크 + 인원 */}
-        <div className="actions">
-          {accessToken && (
-            <div>
-              <BookmarkButton studyId={study.id} />
-            </div>
-          )}
+        <div className="actions" onClick={(e) => e.stopPropagation()}>
+          <div className="bookmarkBtnWrap">
+            <BookmarkButton studyId={study.id} study={study} />
+          </div>
           <div className="members">
             <span className={isFull ? 'membersFull' : ''}>
               {currentMembers}/{maxMembers}

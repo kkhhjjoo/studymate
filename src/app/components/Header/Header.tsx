@@ -21,7 +21,7 @@ export default function Header({ onSearch }: HeaderProps) {
   const router = useRouter();
   const [avatarError, setAvatarError] = useState(false);
   const avatarSrc = user?.image?.trim() || DEFAULT_AVATAR_PATH;
-  const isExternalAvatar = avatarSrc.startsWith('http');
+  const isExternalAvatar = avatarSrc.startsWith('http') || avatarSrc.startsWith('data:');
 
   const handleLogout = () => {
     resetUser();

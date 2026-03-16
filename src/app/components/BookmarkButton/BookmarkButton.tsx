@@ -1,34 +1,44 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useUserStore from '@/zustand/userStore';
 import useBookmarkStore from '@/zustand/bookmarkStore';
 import './BookmarkButton.css';
 import { addBookmarks, deleteBookmark } from '@/actions/bookmarkAction';
-import { FaRegHeart } from 'react-icons/fa';
-import { FaHeart } from 'react-icons/fa';
+import type { Bookmarks } from '@/types/bookmarks';
+import type { Study } from '@/types/studies';
+import { FaRegHeart, FaHeart } from 'react-icons/fa';
 
 interface BookmarkButtonProps {
-  studyId: number;
+  studyId: number | string;
+  study?: Study;
   width?: number;
   height?: number;
   desktopWidth?: number;
   desktopHeight?: number;
 }
 
-export default function BookmarkButton({ studyId, width = 20, height = 20, desktopWidth, desktopHeight }: BookmarkButtonProps) {
+export default function BookmarkButton({ studyId, study, width = 20, height = 20, desktopWidth, desktopHeight }: BookmarkButtonProps) {
   const router = useRouter();
   const { user } = useUserStore();
-  const { isBookmarked, getBookmarkId, removeBookmark, hasHydrated } = useBookmarkStore();
+
+  const isOn = useBookmarkStore((s) => {
+    const id = Number(studyId);
+    return s.bookmarks.some((b) => {
+      if (Number(b.target_id) === id) return true;
+      const p = b.product as { id?: number; _id?: number } | undefined;
+      return p != null && Number(p.id ?? p._id) === id;
+    });
+  });
+  const getBookmarkId = useBookmarkStore((s) => s.getBookmarkId);
+  const removeBookmark = useBookmarkStore((s) => s.removeBookmark);
+  const addBookmarkItem = useBookmarkStore((s) => s.addBookmarkItem);
+  const replaceTempBookmark = useBookmarkStore((s) => s.replaceTempBookmark);
   const accessToken = user?.token?.accessToken || '';
-  const fetchBookmarks = useBookmarkStore((state) => state.fetchBookmarks);
+  const [pending, setPending] = useState(false);
 
-  //hydration 완료 후에만 북마크 상태 확인 (hydration 에러 방지)
-  const currentBookmark = hasHydrated ? isBookmarked(studyId) : false;
-
-  //북마크 추가/제거 처리
   const handleClick = async (e: React.MouseEvent) => {
-    //마우스 클릭 이벤트
     e.preventDefault();
     e.stopPropagation();
 
@@ -36,26 +46,41 @@ export default function BookmarkButton({ studyId, width = 20, height = 20, deskt
       router.push('/login');
       return;
     }
+    if (pending) return;
 
-    if (currentBookmark) {
-      //제거
-      const bookmarkId = getBookmarkId(studyId);
-      if (bookmarkId) {
+    setPending(true);
+    const sid = Number(studyId);
+
+    if (isOn) {
+      const bookmarkId = getBookmarkId(Number(studyId));
+      if (bookmarkId != null) {
         const formData = new FormData();
         formData.append('accessToken', accessToken);
         formData.set('_id', String(bookmarkId));
         const result = await deleteBookmark(null, formData);
-        if (!result) {
-          removeBookmark(bookmarkId);
-        }
+        if (result == null) removeBookmark(bookmarkId);
       }
     } else {
-      //추가
-      const result = await addBookmarks(studyId, accessToken); //북마크 추가 api실행
-      if (result) {
-        await fetchBookmarks(accessToken); //추가할 때 북마크를 리패치
+      const tempId = -Math.abs(sid);
+      addBookmarkItem({
+        _id: tempId,
+        target_id: sid,
+        type: 'study',
+        user_id: 0,
+        product: study ?? ({} as Bookmarks['product']),
+      } as Bookmarks);
+      const newBookmark = await addBookmarks(sid, accessToken);
+      if (newBookmark) {
+        const withProduct = study && !newBookmark.product
+          ? { ...newBookmark, product: study }
+          : newBookmark;
+        replaceTempBookmark(sid, withProduct);
+      } else {
+        removeBookmark(tempId);
       }
     }
+
+    setPending(false);
   };
 
   const cssVars = {
@@ -66,8 +91,14 @@ export default function BookmarkButton({ studyId, width = 20, height = 20, deskt
   } as React.CSSProperties;
 
   return (
-    <button type="button" className="bookmark-btn" style={cssVars} onClick={handleClick} aria-label={currentBookmark ? '북마크 해제' : '북마크 추가'}>
-      {currentBookmark ? <FaHeart className="bookmark-on" /> : <FaRegHeart className="bookmark-off" />}
+    <button
+      type="button"
+      className="bookmark-btn"
+      style={cssVars}
+      onClick={handleClick}
+      aria-label={isOn ? '북마크 해제' : '북마크 추가'}
+    >
+      {isOn ? <FaHeart className="bookmark-on" /> : <FaRegHeart className="bookmark-off" />}
     </button>
   );
 }

@@ -7,7 +7,9 @@
   border: 1px solid var(--border, #e5e7eb);
   border-radius: var(--radius, 0.75rem);
   cursor: pointer;
-  transition: box-shadow 0.2s, border-color 0.2s;
+  transition:
+    box-shadow 0.2s,
+    border-color 0.2s;
   overflow: hidden;
   position: relative;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
@@ -40,21 +42,21 @@
 
 /* 모집중: 보라 배경 + 흰 글씨 */
 .badgeOpen,
-[data-status="badgeOpen"] {
+[data-status='badgeOpen'] {
   background: var(--primary, #7c3aed);
   color: #fff;
 }
 
 /* 인원 마감: 연한 주황 톤 */
 .badgeFull,
-[data-status="badgeFull"] {
+[data-status='badgeFull'] {
   background: #fef3c7;
   color: #b45309;
 }
 
 /* 모집 마감: 회색 */
 .badgeClosed,
-[data-status="badgeClosed"] {
+[data-status='badgeClosed'] {
   background: #f3f4f6;
   color: #6b7280;
 }
@@ -204,6 +206,17 @@
   gap: 0.5rem;
 }
 
+.bookmarkBtnWrap {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  cursor: pointer;
+}
+
 .members {
   display: flex;
   align-items: center;
@@ -213,7 +226,7 @@
 }
 
 .members span:first-child {
-  color: var(--primary, #7c3aed);
+  color: black;
 }
 
 .membersFull {

@@ -44,7 +44,7 @@ export default function StudyFilter({ onFilterChanges, showCategory = true, filt
         )}
 
         <div className="study-filter-wrapper study-filter-date-wrapper">
-          <span aria-hidden="true">{formatDate(date)}</span>
+          <span aria-hidden="true"></span>
           <input
             type="date"
             id="filter-date"

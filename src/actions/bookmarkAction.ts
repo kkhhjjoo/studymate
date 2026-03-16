@@ -1,17 +1,15 @@
 import { BookmarksInfoRes, ErrorRes } from '@/types/api';
+import { Bookmarks } from '@/types/bookmarks';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const CLIENT_ID = process.env.NEXT_PUBLIC_CLIENT_ID || '';
 
 type ActionState = ErrorRes | null;
 
-/* 북마크 추가 */
-export async function addBookmarks(target_id: number, accessToken: string): Promise<boolean> {
-  let res: Response;
-  let data: BookmarksInfoRes | ErrorRes;
-
+/* 북마크 추가 — 성공 시 생성된 Bookmarks 객체 반환, 실패 시 null */
+export async function addBookmarks(target_id: number, accessToken: string): Promise<Bookmarks | null> {
   try {
-    res = await fetch(`${API_URL}/bookmarks/product`, {
+    const res = await fetch(`${API_URL}/bookmarks/product`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -20,14 +18,14 @@ export async function addBookmarks(target_id: number, accessToken: string): Prom
       },
       body: JSON.stringify({ target_id }),
     });
-    data = await res.json();
-    console.log('API응답데이터', data);
+    const data = (await res.json()) as Record<string, unknown> & { ok?: number; item?: Bookmarks };
+    const ok = Number(data?.ok) === 1 || res.ok;
+    if (ok && data?.item != null) return data.item as Bookmarks;
+    return null;
   } catch (error) {
     console.error(error);
-    return false;
+    return null;
   }
-
-  return !!data.ok;
 }
 
 //북마크 삭제

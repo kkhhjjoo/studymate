@@ -17,7 +17,8 @@ export interface CreateStudyInput {
 
 function productToStudy(p: ApiProduct): Study {
   const { _id, ...rest } = p;
-  return { ...rest, seller_id: _id != null ? String(_id) : undefined };
+  const id = Number((rest as { id?: number }).id ?? _id) || 0;
+  return { ...rest, id, seller_id: _id != null ? String(_id) : undefined };
 }
 
 function studyToBody(study: CreateStudyInput): Record<string, unknown> {

@@ -1,12 +1,22 @@
-button {
+.bookmark-btn {
   background-color: transparent;
   outline: none;
   border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
 }
 
-.bookmark-off {
-  color: red;
+.bookmark-btn:hover .bookmark-off,
+.bookmark-btn:hover .bookmark-on {
+  transform: scale(1.1);
 }
+
+.bookmark-off,
 .bookmark-on {
-  color: red;
+  color: #dc2626;
+  transition: transform 0.2s ease;
 }

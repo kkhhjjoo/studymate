@@ -1,8 +1,6 @@
 'use client';
 
-import styles from './page.module.css';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+
 import { IoIosTrendingUp } from 'react-icons/io';
 import { LuUsers } from 'react-icons/lu';
 import Header from '@/app/components/Header/Header';
@@ -43,16 +41,64 @@ export default function Home() {
 
   const filteredStudies = useMemo(() => {
     let list = studies;
-    const recruitment = filters.recruitmentStatus;
-    if (recruitment === 'open') list = list.filter((s) => !s.extra?.isClosed);
-    else if (recruitment === 'closed') list = list.filter((s) => s.extra?.isClosed === true);
+
+    // 모집 상태
+    if (filters.recruitmentStatus === 'open') list = list.filter((s) => !s.extra?.isClosed);
+    else if (filters.recruitmentStatus === 'closed') list = list.filter((s) => s.extra?.isClosed === true);
+
+    // 카테고리
+    if (filters.category && filters.category !== '전체') {
+      list = list.filter((s) => s.extra?.category === filters.category);
+    }
+
+    // 시작일 (선택한 날짜 이후 스터디)
+    if (filters.date) {
+      const filterDate = new Date(filters.date).getTime();
+      list = list.filter((s) => {
+        if (!s.extra?.startDate) return true;
+        return new Date(s.extra.startDate).getTime() >= filterDate;
+      });
+    }
+
+    // 지역 (광역시/도)
+    if (filters.region) {
+      list = list.filter((s) => s.extra?.location?.name?.includes(filters.region));
+    }
+
+    // 시/군/구
+    if (filters.district) {
+      list = list.filter((s) => s.extra?.location?.name?.includes(filters.district));
+    }
+
+    // 인원 수
+    if (filters.quantity) {
+      list = list.filter((s) => {
+        const max = s.extra?.maxMembers ?? 0;
+        if (filters.quantity === '1 ~ 10명') return max >= 1 && max <= 10;
+        if (filters.quantity === '11 ~ 20명') return max >= 11 && max <= 20;
+        if (filters.quantity === '21 ~ 30명') return max >= 21 && max <= 30;
+        if (filters.quantity === '30명 이상') return max > 30;
+        return true;
+      });
+    }
+
+    // 태그
     if (filters.tag) list = list.filter((s) => s.extra?.tags?.includes(filters.tag));
+
+    // 검색어
     if (filters.search) {
       const q = filters.search.toLowerCase();
-      list = list.filter((s) => s.name?.toLowerCase().includes(q) || s.content?.toLowerCase().includes(q) || s.extra?.category?.toLowerCase().includes(q) || s.extra?.tags?.some((t) => t.toLowerCase().includes(q)));
+      list = list.filter(
+        (s) =>
+          s.name?.toLowerCase().includes(q) ||
+          s.content?.toLowerCase().includes(q) ||
+          s.extra?.category?.toLowerCase().includes(q) ||
+          s.extra?.tags?.some((t) => t.toLowerCase().includes(q))
+      );
     }
+
     return list;
-  }, [studies, filters.recruitmentStatus, filters.tag, filters.search]);
+  }, [studies, filters]);
   return (
     <>
       <Header onSearch={(q) => setFilters((prev) => ({ ...prev, search: q }))} />

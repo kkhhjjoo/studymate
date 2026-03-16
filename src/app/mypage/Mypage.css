@@ -45,13 +45,117 @@
   margin-top: 4px;
 }
 
-.profileBio {
+.profileBioWrapper {
+  position: relative;
   margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.profileBio {
   width: 100%;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 8px 12px;
+  min-height: 48px;
+  border-radius: 9999px;
+  border: 1px solid #e5e7eb;
+  padding: 10px 16px 10px 18px;
   resize: none;
+  background-color: #f9fafb;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.profileBio:focus {
+  outline: none;
+  border-color: #a855f7;
+  box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.25);
+}
+
+.profileBioIcon {
+  position: absolute;
+  left: -14px;
+  bottom: 10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  border: none;
+  background: #ede9fe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7c3aed;
+  box-shadow: 0 2px 4px rgba(148, 163, 184, 0.4);
+  cursor: default;
+}
+
+/* 프로필 수정 페이지 */
+.editProfileForm {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.editProfileSection {
+  padding: 20px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+}
+
+.editAvatarRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.editAvatarPreview {
+  width: 80px;
+  height: 80px;
+  border-radius: 9999px;
+  overflow: hidden;
+  background: #ede9fe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.editAvatarPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.editAvatarUpload {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  background: #4f46e5;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.editAvatarUpload:hover {
+  background: #4338ca;
+}
+
+.editAvatarFileName {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.editProfileActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
 
 /* 통계 */
@@ -94,25 +198,143 @@
   color: white;
 }
 
-/* 북마크 카드 */
+/* 북마크 카드 - 가로로 긴 카드 */
 .bookmarkList {
   display: flex;
-  gap: 16px;
-  overflow-x: auto;
+  flex-direction: column;
+  gap: 0;
 }
 
-.bookmarkCard {
-  width: 280px;
-  border-radius: 12px;
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  padding: 16px;
-  background: rgba(199, 210, 254, 0.4);
+.bookmarkCardHorizontal {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
   cursor: pointer;
-  transition: 0.2s;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  margin-bottom: 12px;
+  text-align: left;
 }
 
-.bookmarkCard:hover {
-  background: rgba(199, 210, 254, 0.6);
+.bookmarkCardHorizontal:last-child {
+  margin-bottom: 0;
+}
+
+.bookmarkCardHorizontal:hover {
+  border-color: #c7d2fe;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.bookmarkCardMain {
+  margin-bottom: 0.75rem;
+}
+
+.bookmarkCardTop {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.bookmarkCardBadge {
+  flex-shrink: 0;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.bookmarkCardBadgeOpen {
+  background: #7c3aed;
+  color: #fff;
+}
+
+.bookmarkCardBadgeFull {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.bookmarkCardBadgeClosed {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.bookmarkCardTitle {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #171717;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+}
+
+.bookmarkCardDescription {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0 0 0.5rem 0;
+}
+
+.bookmarkCardTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.bookmarkCardTag {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.375rem;
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.bookmarkCardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.8125rem;
+  color: #9ca3af;
+}
+
+.bookmarkCardAuthor {
+  color: #6b7280;
+}
+
+.bookmarkCardHeart {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.bookmarkCardHeartIcon {
+  color: #dc2626;
+  font-size: 0.875rem;
+}
+
+.bookmarkCardHeartCount {
+  color: #6b7280;
+}
+
+/* 레거시 클래스 호환 */
+.bookmarkCard {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  padding: 1rem 1.25rem;
+  background: #fff;
+  cursor: pointer;
 }
 
 .bookmarkTitle {
@@ -124,230 +346,49 @@
   font-size: 12px;
   color: #6b7280;
 }
-/* profile-section.css */
 
-/* ── 프로필 카드 ── */
-.profileCard {
-  border: 2px solid #c7d2fe;
-  border-radius: 16px;
-  background-color: #ffffff;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-}
-
-.profileInner {
-  display: flex;
-  gap: 16px;
-}
-
-.avatarWrapper {
-  position: relative;
-  flex-shrink: 0;
-}
-
-.avatarImg {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: 2px solid #e5e7eb;
-  object-fit: cover;
-  display: block;
-}
-
-.avatarFallback {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: 2px solid #e5e7eb;
-  background-color: #ede9fe;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #6366f1;
-}
-
-.editBtn {
-  position: absolute;
-  bottom: -4px;
-  right: -4px;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 2px solid #ffffff;
-  background-color: #e0e7ff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #6366f1;
-  padding: 0;
-  transition: background-color 0.2s;
-}
-
-.editBtn:hover {
-  background-color: #c7d2fe;
-}
-
-.profileInfo {
-  flex: 1;
-  min-width: 0;
-}
-
-.profileTop {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.userName {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0 0 2px;
-}
-
-.userEmail {
-  font-size: 0.875rem;
-  color: #6b7280;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin: 0 0 4px;
-}
-
-.userMeta {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin: 0;
-}
-
-.profileRight {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
-.bpmText {
-  font-size: 0.75rem;
-  color: #6b7280;
-}
-
-.bioTextarea {
+.bookmarkEmptyBox {
   margin-top: 12px;
-  width: 100%;
-  box-sizing: border-box;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  background-color: rgba(243, 244, 246, 0.5);
-  padding: 8px 12px;
-  font-size: 0.875rem;
-  color: #111827;
-  resize: none;
-  font-family: inherit;
-  line-height: 1.5;
-}
-
-.bioTextarea::placeholder {
-  color: #9ca3af;
-}
-
-.bioTextarea:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-}
-
-/* ── 통계 박스 ── */
-.statsBox {
-  border: 2px solid #c7d2fe;
+  padding: 24px 16px;
   border-radius: 16px;
-  background-color: #ffffff;
-  padding: 20px;
-  margin-bottom: 20px;
+  background: #f9fafb;
+  border: 1px dashed #e5e7eb;
   display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.statItem {
-  flex: 1;
-  text-align: center;
-}
-
-.statItem + .statItem {
-  border-left: 1px solid #e5e7eb;
-}
-
-.statLabel {
-  font-size: 0.875rem;
+.bookmarkEmptyText {
+  font-size: 14px;
   color: #6b7280;
-  margin: 0 0 4px;
 }
 
-.statValue {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
+/* 섹션 제목 (참여 신청한 스터디 등) */
+.sectionTitle {
+  font-size: 1.125rem;
+  font-weight: bold;
+  color: #171717;
+  margin-bottom: 1rem;
 }
 
-/* ── 탭 버튼 3개 ── */
-.tabGroup {
+.sectionTitleWithIcon {
   display: flex;
-  gap: 12px;
-  margin-bottom: 32px;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.tabBtn {
-  flex: 1;
-  padding: 8px 0;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition:
-    background-color 0.15s,
-    color 0.15s;
+.sectionTitleIcon {
+  flex-shrink: 0;
+  color: #171717;
 }
 
-/* 북마크 탭 */
-.tabBtnBookmark {
-  background-color: #f1f5f9;
-  color: #1e293b;
-  border-color: #e2e8f0;
+.sectionTitleText {
+  font-weight: bold;
+  color: #171717;
 }
 
-.tabBtnBookmarkActive {
-  background-color: #6366f1;
-  color: #ffffff;
-  border-color: #6366f1;
-}
-
-/* 관리하기 탭 */
-.tabBtnManage {
-  background-color: #f1f5f9;
-  color: #1e293b;
-  border-color: #e2e8f0;
-}
-
-.tabBtnManageActive {
-  background-color: #e2e8f0;
-  color: #1e293b;
-  border-color: #cbd5e1;
-}
-
-/* 참여 모임 탭 */
-.tabBtnParticipated {
-  background-color: #e0f2fe;
-  color: #075985;
-  border-color: #bae6fd;
-}
-
-.tabBtnParticipatedActive {
-  background-color: #bae6fd;
-  color: #075985;
-  border-color: #7dd3fc;
+.sectionTitleCount {
+  font-weight: normal;
+  color: #6b7280;
+  margin-left: 0.25rem;
 }

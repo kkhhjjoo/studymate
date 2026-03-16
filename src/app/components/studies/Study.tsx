@@ -3,21 +3,10 @@
 import Link from 'next/link';
 import Header from '@/app/components/Header/Header';
 import useUserStore from '@/zustand/userStore';
+import { StudyCardData } from '@/types/studies';
 import { LuCrown } from "react-icons/lu";
 import { FaUser } from "react-icons/fa";
 import './Study.css';
-
-interface StudyCardData {
-  id: number | string;
-  title: string;
-  hostId: string;
-  hostName: string;
-  category: string;
-  maxMembers: number;
-  currentMembers: number;
-  isClosed: boolean;
-  participants: { userId: string; status: 'pending' | 'approved' | 'rejected' }[];
-}
 
 interface Props {
   studies: StudyCardData[];
@@ -45,12 +34,6 @@ export default function MyStudy({ studies, hideHeader = false }: Props) {
 
   // 내가 만든 스터디 필터링
   const myHostStudies = studies.filter((s) => String(s.hostId) === String(user._id));
-  // 내가 참여 신청한 스터디 필터링 (내가 만든 것 제외)
-  const myAppliedStudies = studies.filter(
-    (s) =>
-      String(s.hostId) !== String(user._id) &&
-      s.participants.some((p) => String(p.userId) === String(user._id))
-  );
 
   /** 스터디 카드 서브 컴포넌트 — 역할(host/participant)에 따라 배지를 다르게 표시 */
   const StudyItem = ({
@@ -127,7 +110,7 @@ export default function MyStudy({ studies, hideHeader = false }: Props) {
   return (
     <div className="pageWrapper">
       {!hideHeader && <Header />}
-      <main className="main">
+      <main className="studyMain">
         <h1 className="pageTitle">내 스터디</h1>
         {/* 내가 만든 스터디 */}
         <section className="section">
@@ -149,27 +132,8 @@ export default function MyStudy({ studies, hideHeader = false }: Props) {
               </div>
             </div>
           ) : (
-            <div className="grid">
+            <div className="studyGrid">
               {myHostStudies.map((study) => <StudyItem key={study.id} study={study} role="host" />)}
-            </div>
-          )}
-        </section>
-
-        {/* 내가 참여 신청한 스터디 */}
-        <section className="section">
-          <h2 className="sectionTitle">
-            <FaUser size={20} />
-            참여 신청한 스터디
-            <span className="sectionCount">({myAppliedStudies.length})</span>
-          </h2>
-
-          {myAppliedStudies.length === 0 ? (
-            <div className="emptyBox">
-              <p className="emptyText">아직 참여 신청한 스터디가 없습니다.</p>
-            </div>
-          ) : (
-            <div className="grid">
-              {myAppliedStudies.map((study) => <StudyItem key={study.id} study={study} role="participant" />)}
             </div>
           )}
         </section>

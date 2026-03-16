@@ -11,6 +11,12 @@ interface BookmarkStoreState {
   // 북마크 목록 설정
   setBookmarks: (bookmarks: Bookmarks[]) => void;
 
+  // 북마크 추가 (로컬 상태)
+  addBookmarkItem: (item: Bookmarks) => void;
+
+  // target_id로 찾은 임시 북마크(_id < 0)를 실제 항목으로 교체
+  replaceTempBookmark: (targetId: number, realItem: Bookmarks) => void;
+
   // 북마크 삭제 (로컬 상태)
   removeBookmark: (bookmarkId: number) => void;
 
@@ -42,6 +48,16 @@ const BookmarkStore: StateCreator<BookmarkStoreState> = (set, get) => ({
 
   setHasHydrated: (state) => set({ hasHydrated: state }),
 
+  addBookmarkItem: (item) =>
+    set((state) => ({ bookmarks: [...state.bookmarks, item] })),
+
+  replaceTempBookmark: (targetId, realItem) =>
+    set((state) => ({
+      bookmarks: state.bookmarks.map((b) =>
+        Number(b.target_id) === Number(targetId) && b._id < 0 ? realItem : b
+      ),
+    })),
+
   removeBookmark: (bookmarkId) =>
     set((state) => ({
       bookmarks: state.bookmarks.filter((bookmark) => bookmark._id !== bookmarkId),
@@ -49,12 +65,20 @@ const BookmarkStore: StateCreator<BookmarkStoreState> = (set, get) => ({
 
   isBookmarked: (targetId) => {
     const id = Number(targetId);
-    return get().bookmarks.some((bookmark) => Number(bookmark.product?._id ?? bookmark.product?.id) === id);
+    return get().bookmarks.some((b) => {
+      if (Number(b.target_id) === id) return true;
+      const p = b.product as { id?: number; _id?: number } | undefined;
+      return p && (Number(p.id ?? p._id) === id);
+    });
   },
 
   getBookmarkId: (targetId) => {
     const id = Number(targetId);
-    const bookmark = get().bookmarks.find((b) => Number(b.product?._id ?? b.product?.id) === id);
+    const bookmark = get().bookmarks.find((b) => {
+      if (Number(b.target_id) === id) return true;
+      const p = b.product as { id?: number; _id?: number } | undefined;
+      return p && (Number(p.id ?? p._id) === id);
+    });
     return bookmark ? bookmark._id : null;
   },
 

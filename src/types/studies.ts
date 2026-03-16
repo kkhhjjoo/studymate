@@ -45,3 +45,19 @@ export interface StudyExtra {
   isClosed: boolean;
   participant: Participant[];
 }
+
+/** API Study를 UI 카드용 평탄화 데이터로 변환한 타입 */
+export interface StudyCardData {
+  id: number | string;
+  title: string;
+  hostId: string;
+  hostName: string;
+  category: string;
+  maxMembers: number;
+  currentMembers: number;
+  isClosed: boolean;
+  description?: string;
+  startDate?: string;
+  location?: StudyLocation;
+  participants: { userId: string; status: 'pending' | 'approved' | 'rejected' }[];
+}
