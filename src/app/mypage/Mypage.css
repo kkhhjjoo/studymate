@@ -1,0 +1,353 @@
+/* 마이페이지 기본 레이아웃 */
+.mypageContainer {
+  min-height: 100vh;
+}
+
+.mypageMain {
+  max-width: 768px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.mypageTitle {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 24px;
+}
+
+/* 프로필 카드 */
+.profileCard {
+  border: 2px solid rgba(99, 102, 241, 0.2);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background: white;
+}
+
+.profileWrapper {
+  display: flex;
+  gap: 16px;
+}
+
+.profileInfo h2 {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.profileEmail {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.profileMeta {
+  font-size: 14px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.profileBio {
+  margin-top: 12px;
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 8px 12px;
+  resize: none;
+}
+
+/* 통계 */
+.statsBox {
+  border: 2px solid rgba(99, 102, 241, 0.2);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  display: flex;
+}
+
+.statsItem {
+  flex: 1;
+  text-align: center;
+}
+
+.statsNumber {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+/* 버튼 */
+.tabButtons {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.tabButton {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: #f1f5f9;
+}
+
+.tabButton.active {
+  background: #6366f1;
+  color: white;
+}
+
+/* 북마크 카드 */
+.bookmarkList {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+}
+
+.bookmarkCard {
+  width: 280px;
+  border-radius: 12px;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  padding: 16px;
+  background: rgba(199, 210, 254, 0.4);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.bookmarkCard:hover {
+  background: rgba(199, 210, 254, 0.6);
+}
+
+.bookmarkTitle {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.bookmarkInfo {
+  font-size: 12px;
+  color: #6b7280;
+}
+/* profile-section.css */
+
+/* ── 프로필 카드 ── */
+.profileCard {
+  border: 2px solid #c7d2fe;
+  border-radius: 16px;
+  background-color: #ffffff;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.profileInner {
+  display: flex;
+  gap: 16px;
+}
+
+.avatarWrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatarImg {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid #e5e7eb;
+  object-fit: cover;
+  display: block;
+}
+
+.avatarFallback {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid #e5e7eb;
+  background-color: #ede9fe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #6366f1;
+}
+
+.editBtn {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  background-color: #e0e7ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #6366f1;
+  padding: 0;
+  transition: background-color 0.2s;
+}
+
+.editBtn:hover {
+  background-color: #c7d2fe;
+}
+
+.profileInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.profileTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.userName {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 2px;
+}
+
+.userEmail {
+  font-size: 0.875rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0 0 4px;
+}
+
+.userMeta {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.profileRight {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.bpmText {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.bioTextarea {
+  margin-top: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background-color: rgba(243, 244, 246, 0.5);
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  color: #111827;
+  resize: none;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.bioTextarea::placeholder {
+  color: #9ca3af;
+}
+
+.bioTextarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+/* ── 통계 박스 ── */
+.statsBox {
+  border: 2px solid #c7d2fe;
+  border-radius: 16px;
+  background-color: #ffffff;
+  padding: 20px;
+  margin-bottom: 20px;
+  display: flex;
+}
+
+.statItem {
+  flex: 1;
+  text-align: center;
+}
+
+.statItem + .statItem {
+  border-left: 1px solid #e5e7eb;
+}
+
+.statLabel {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0 0 4px;
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+/* ── 탭 버튼 3개 ── */
+.tabGroup {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.tabBtn {
+  flex: 1;
+  padding: 8px 0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+/* 북마크 탭 */
+.tabBtnBookmark {
+  background-color: #f1f5f9;
+  color: #1e293b;
+  border-color: #e2e8f0;
+}
+
+.tabBtnBookmarkActive {
+  background-color: #6366f1;
+  color: #ffffff;
+  border-color: #6366f1;
+}
+
+/* 관리하기 탭 */
+.tabBtnManage {
+  background-color: #f1f5f9;
+  color: #1e293b;
+  border-color: #e2e8f0;
+}
+
+.tabBtnManageActive {
+  background-color: #e2e8f0;
+  color: #1e293b;
+  border-color: #cbd5e1;
+}
+
+/* 참여 모임 탭 */
+.tabBtnParticipated {
+  background-color: #e0f2fe;
+  color: #075985;
+  border-color: #bae6fd;
+}
+
+.tabBtnParticipatedActive {
+  background-color: #bae6fd;
+  color: #075985;
+  border-color: #7dd3fc;
+}
