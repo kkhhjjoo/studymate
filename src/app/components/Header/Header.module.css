@@ -1,12 +1,12 @@
-/* Header - 흰 배경, 좌 로고 | 중앙 네비 | 우 버튼·알림·아바타·로그아웃 */
-.app-header {
+/* Header.module.css */
+.appHeader {
   width: 100%;
   background: #fff;
   border-bottom: 1px solid var(--border, #e5e7eb);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-.app-header-container {
+.appHeaderContainer {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -16,8 +16,7 @@
   min-height: 56px;
 }
 
-/* 좌측: 로고 + 앱명 */
-.app-header-brand {
+.appHeaderBrand {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -26,11 +25,11 @@
   font-size: 1.125rem;
 }
 
-.app-header-brand:hover {
+.appHeaderBrand:hover {
   color: #000;
 }
 
-.app-header-logo {
+.appHeaderLogo {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -42,13 +41,12 @@
   flex-shrink: 0;
 }
 
-.app-header-logo svg {
+.appHeaderLogo svg {
   width: 20px;
   height: 20px;
 }
 
-/* 중앙: 네비게이션 */
-.app-header-nav {
+.appHeaderNav {
   display: flex;
   align-items: center;
   gap: 2rem;
@@ -57,30 +55,29 @@
   transform: translateX(-50%);
 }
 
-.app-header-nav a {
+.appHeaderNav a {
   font-size: 0.9375rem;
   color: var(--text-secondary, #6b7280);
   font-weight: 500;
   transition: color 0.2s;
 }
 
-.app-header-nav a:hover {
+.appHeaderNav a:hover {
   color: #000;
 }
 
-.app-header-nav a[data-active="true"] {
+.appHeaderNav a[data-active='true'] {
   color: #000;
   font-weight: 600;
 }
 
-/* 검색바 */
-.app-header-search {
+.appHeaderSearch {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-.app-header-search-icon {
+.appHeaderSearchIcon {
   position: absolute;
   left: 0.75rem;
   color: var(--text-secondary, #6b7280);
@@ -89,7 +86,7 @@
   pointer-events: none;
 }
 
-.app-header-search-input {
+.appHeaderSearchInput {
   width: 320px;
   padding: 0.45rem 0.75rem 0.45rem 2.25rem;
   border: none;
@@ -99,22 +96,23 @@
   font-size: 0.875rem;
   color: #171717;
   outline: none;
-  transition: border-color 0.2s, width 0.2s;
+  transition:
+    border-color 0.2s,
+    width 0.2s;
 }
 
-.app-header-search-input:focus {
+.appHeaderSearchInput:focus {
   border-bottom-color: var(--primary, #7c3aed);
   width: 400px;
 }
 
-/* 우측: 버튼 + 알림 + 아바타 + 로그아웃 */
-.app-header-actions {
+.appHeaderActions {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
-.app-header-btn-create {
+.appHeaderBtnCreate {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
@@ -129,17 +127,17 @@
   transition: background 0.2s;
 }
 
-.app-header-btn-create:hover {
+.appHeaderBtnCreate:hover {
   background: #6d28d9;
   color: #fff;
 }
 
-.app-header-btn-create svg {
+.appHeaderBtnCreate svg {
   width: 14px;
   height: 14px;
 }
 
-.app-header-notification {
+.appHeaderNotification {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -151,15 +149,17 @@
   color: #374151;
   cursor: pointer;
   position: relative;
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
 }
 
-.app-header-notification:hover {
+.appHeaderNotification:hover {
   background: #f9fafb;
   border-color: #d1d5db;
 }
 
-.app-header-notification-dot {
+.appHeaderNotificationDot {
   position: absolute;
   top: 8px;
   right: 8px;
@@ -169,7 +169,7 @@
   background: #000;
 }
 
-.app-header-avatar {
+.appHeaderAvatar {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -184,13 +184,13 @@
   overflow: hidden;
 }
 
-.app-header-avatar img {
+.appHeaderAvatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.app-header-avatar-initial {
+.appHeaderAvatarInitial {
   width: 100%;
   height: 100%;
   display: flex;
@@ -201,7 +201,7 @@
   color: inherit;
 }
 
-.app-header-logout {
+.appHeaderLogout {
   font-size: 0.875rem;
   font-weight: 500;
   color: #374151;
@@ -212,37 +212,38 @@
   transition: color 0.2s;
 }
 
-.app-header-logout:hover {
+.appHeaderLogout:hover {
   color: #000;
 }
 
-/* 비로그인: 로그인/회원가입 */
-.app-header-auth {
+.appHeaderAuth {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.app-header-auth a {
+.appHeaderAuth a {
   font-size: 0.875rem;
   font-weight: 500;
   color: #374151;
   padding: 0.375rem 0.75rem;
   border-radius: 0.5rem;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
-.app-header-auth a:hover {
+.appHeaderAuth a:hover {
   color: #000;
   background: #f3f4f6;
 }
 
-.app-header-auth a:first-child {
+.appHeaderAuth a:first-child {
   background: var(--primary, #7c3aed);
   color: #fff;
 }
 
-.app-header-auth a:first-child:hover {
+.appHeaderAuth a:first-child:hover {
   background: #6d28d9;
   color: #fff;
 }

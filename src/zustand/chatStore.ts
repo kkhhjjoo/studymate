@@ -66,7 +66,7 @@ const useChatStore = create<ChatStoreState>((set, get) => ({
 
         if (!targetRoom) {
           const serverRooms = await getMyRoom();
-          get().setRooms(Array.isArray(serverRooms) ? serverRooms as ChatRoom[] : [serverRooms as unknown as ChatRoom], user._id);
+          get().setRooms(serverRooms, String(user._id));
           return;
         }
 
@@ -74,7 +74,7 @@ const useChatStore = create<ChatStoreState>((set, get) => ({
           const currentMessages = state.messagesByRoom[roomId] || [];
           const updatedMessages = [...currentMessages, msg];
           const otherRooms = state.rooms.filter((room) => room._id !== roomId);
-          const isMyMessage = msg.senderId === user._id;
+          const isMyMessage = msg.senderId === String(user._id);
           const isActiveRoom = state.activeRoomId === roomId;
 
           const updatedRoom: ChatRoomState = {
@@ -117,7 +117,7 @@ const useChatStore = create<ChatStoreState>((set, get) => ({
       set({ chatSocket: socket });
 
       const serverRooms = await getMyRoom();
-      get().setRooms(Array.isArray(serverRooms) ? serverRooms as ChatRoom[] : [serverRooms as unknown as ChatRoom], user._id);
+      get().setRooms(serverRooms, String(user._id));
     } catch (error) {
       console.error('채팅 서버 연결 실패:', error);
       set({ isConnecting: false });
@@ -152,9 +152,9 @@ const useChatStore = create<ChatStoreState>((set, get) => ({
   setRooms: (serverRooms, userId) => {
     const rooms: ChatRoomState[] = serverRooms.map((room) => ({
       ...room,
-      lastMessage: (room as any).messages?.at(-1),
+      lastMessage: room.messages?.at(-1),
       unreadCount:
-        (room as any).messages?.filter(
+        room.messages?.filter(
           (msg: ChatMessage) => !(msg.readUserIds ?? []).includes(userId)
         ).length ?? 0,
     }));
@@ -169,9 +169,9 @@ const useChatStore = create<ChatStoreState>((set, get) => ({
 
       const newRoom: ChatRoomState = {
         ...room,
-        lastMessage: (room as any).messages?.at(-1),
+        lastMessage: room.messages?.at(-1),
         unreadCount:
-          (room as any).messages?.filter(
+          room.messages?.filter(
             (msg: ChatMessage) => !(msg.readUserIds ?? []).includes(userId)
           ).length ?? 0,
       };

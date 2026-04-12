@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useUserStore from '@/zustand/userStore';
 import useBookmarkStore from '@/zustand/bookmarkStore';
-import './BookmarkButton.css';
+import styles from './BookmarkButton.module.css';
 import { addBookmarks, deleteBookmark } from '@/actions/bookmarkAction';
 import type { Bookmarks } from '@/types/bookmarks';
 import type { Study } from '@/types/studies';
@@ -71,9 +71,7 @@ export default function BookmarkButton({ studyId, study, width = 20, height = 20
       } as Bookmarks);
       const newBookmark = await addBookmarks(sid, accessToken);
       if (newBookmark) {
-        const withProduct = study && !newBookmark.product
-          ? { ...newBookmark, product: study }
-          : newBookmark;
+        const withProduct = study && !newBookmark.product ? { ...newBookmark, product: study } : newBookmark;
         replaceTempBookmark(sid, withProduct);
       } else {
         removeBookmark(tempId);
@@ -91,14 +89,8 @@ export default function BookmarkButton({ studyId, study, width = 20, height = 20
   } as React.CSSProperties;
 
   return (
-    <button
-      type="button"
-      className="bookmark-btn"
-      style={cssVars}
-      onClick={handleClick}
-      aria-label={isOn ? '북마크 해제' : '북마크 추가'}
-    >
-      {isOn ? <FaHeart className="bookmark-on" /> : <FaRegHeart className="bookmark-off" />}
+    <button type="button" className={styles.bookmarkBtn} style={cssVars} onClick={handleClick} aria-label={isOn ? '북마크 해제' : '북마크 추가'}>
+      {isOn ? <FaHeart className={styles.bookmarkOn} /> : <FaRegHeart className={styles.bookmarkOff} />}
     </button>
   );
 }

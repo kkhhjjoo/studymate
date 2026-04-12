@@ -1,0 +1,32 @@
+info:
+  name: 상품 등록
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{url}}/seller/products/"
+  headers:
+    - name: Authorization
+      value: Bearer {{accessToken}}
+  body:
+    type: json
+    data: |-
+      {
+        "name":"UI/UX 디자인",
+      "content":"피그마로 UI/UX디자인해요~",
+      "price": 0,
+      "quantity":2,
+      "shippingFees": 0,
+      "show":"true",
+      "seller_id":2,
+      "active":"true",
+      "buyQuantity":0
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

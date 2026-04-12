@@ -1,0 +1,15 @@
+info:
+  name: 상품 목록 조회
+  type: http
+  seq: 5
+
+http:
+  method: GET
+  url: "{{url}}/products/"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -11,3 +11,16 @@ export interface Manage {
     image: string;
   };
 }
+
+/** GET /seller/orders 응답 행 (필드 누락·타입 변형 허용) */
+export interface SellerOrderRow {
+  _id?: number | string;
+  user_id?: number | string;
+  product_id?: number | string;
+  quantity?: number;
+  products?: Partial<Study>[];
+  user?: { name?: string; image?: string };
+  extra?: { message?: string; type?: string };
+  createdAt?: string;
+  created_at?: string;
+}

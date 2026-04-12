@@ -1,68 +1,90 @@
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import Link from 'next/link';
-import type { Study as ApiStudy, StudyCardData } from '@/types/studies';
-import './Detail.css';
+import type { Study as ApiStudy, StudyCardData, StudyExtra } from '@/types/studies';
+import styles from './Detail.module.css';
 
 import { ParticipantManage } from '@/app/components/participant-manager/participant-manager';
 import StudyMap from '@/app/components/StudyMap';
-import useUserStore from '@/zustand/userStore';
 import { toast, ToastContainer } from 'react-toastify';
-import { FiArrowLeft, FiHeart, FiMessageCircle, FiMapPin, FiSettings, FiSend, FiUsers, FiClock, FiCalendar, FiUserPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import useUserStore from '@/zustand/userStore';
 import 'react-toastify/dist/ReactToastify.css';
+import { FiArrowLeft, FiHeart, FiMessageCircle, FiMapPin, FiSettings, FiSend, FiUsers, FiClock, FiCalendar, FiUserPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
+
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { getStudyDetail } from '@/lib/study';
+import {
+  getStudyDetail,
+  updateStudyAPI,
+  fetchSellerOrders,
+  mergeSellerOrdersIntoStudyCard,
+  applyParticipantDecision,
+} from '@/lib/study';
+import { createApply, deleteStudyProduct } from '@/actions/study';
 
-// TODO: lib/actions 연결 후 실제 함수로 교체
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const getMessagesForStudy = (_id: number | string): { id: string; userId: number; userName: string; content: string }[] => [];
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const sendMessage = (_studyId: number | string, _content: string): void => {};
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const addBookmarkAPI = async (_studyId: number | string, _token: string): Promise<boolean> => false;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const applyToStudy = (_studyId: number | string, _message: string): void => {};
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const toggleStudyClosed = (_studyId: number | string): void => {};
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const deleteStudy = (_studyId: number | string): void => {};
+
+function normalizeParticipantStatus(s: unknown): 'pending' | 'approved' | 'rejected' {
+  const v = String(s ?? 'pending').toLowerCase();
+  if (v === 'approved' || v === 'approve') return 'approved';
+  if (v === 'rejected' || v === 'reject' || v === 'denied') return 'rejected';
+  return 'pending';
+}
 
 function toStudyCardData(s: ApiStudy): StudyCardData {
+  // API는 _id만 주고 id가 비는 경우가 많음 → study.id가 undefined면 링크가 /study/undefined/ 가 됨
+  const stableId = s._id ?? s.id ?? 0;
   return {
-    id: s.id,
+    id: stableId,
     title: s.name,
-    hostId: s.extra?.hostId ?? '',
-    hostName: s.extra?.hostName ?? '',
+    // 호스트 정보: extra에 없으면 seller 정보로 보완
+    hostId: s.extra?.hostId ?? String((s.seller && s.seller._id) ?? s.seller_id ?? ''),
+    sellerId: String((s.seller && s.seller._id) ?? s.seller_id ?? ''),
+    hostName: s.extra?.hostName ?? s.seller?.name ?? '스터디장',
     category: s.extra?.category ?? '',
     tags: s.extra?.tags ?? [],
-    maxMembers: s.extra?.maxMembers ?? 0,
-    currentMembers: s.extra?.participant?.filter((p) => p.status === 'approved').length ?? 0,
+    // 총 인원 / 현재 인원은 quantity / buyQuantity 기준
+    maxMembers: s.quantity ?? s.extra?.maxMembers ?? 0,
+    currentMembers: s.buyQuantity ?? 0,
     isClosed: s.extra?.isClosed ?? false,
     description: s.content,
     schedule: s.extra?.schedule ?? '',
     startDate: s.extra?.startDate,
     endDate: s.extra?.endDate,
     location: s.extra?.location ?? { name: '-', lat: 0, lng: 0 },
-    participants: s.extra?.participant?.map((p) => ({
-      id: p.userId,
-      userId: p.userId,
-      userName: p.userName,
-      status: p.status,
-      message: '',
-      appliedAt: p.joinedAt ?? '',
-    })) ?? [],
+    participants:
+      s.extra?.participant?.map((p, idx) => {
+        const row = p as typeof p & { message?: string };
+        return {
+          id: String(row.userId ?? idx),
+          userId: String(row.userId ?? ''),
+          userName: row.userName ?? '',
+          status: normalizeParticipantStatus(row.status),
+          message: row.message ?? '',
+          appliedAt: row.joinedAt ?? '',
+        };
+      }) ?? [],
   };
 }
 
-async function fetchProductByIdAPI(id: string | number, _accessToken: string): Promise<StudyCardData | null> {
-  const res = await getStudyDetail(id);
+async function fetchProductByIdAPI(
+  id: string | number,
+  accessToken: string,
+  viewerUserId?: string | number | null
+): Promise<StudyCardData | null> {
+  const res = await getStudyDetail(id, accessToken || undefined);
   if (!('ok' in res) || res.ok === 0) return null;
-  const apiStudy = res.item as unknown as ApiStudy;
+  const apiStudy: ApiStudy = res.item;
   if (!apiStudy) return null;
-  return toStudyCardData(apiStudy);
+  let card = toStudyCardData(apiStudy);
+  const sellerKey = card.sellerId || card.hostId;
+  if (accessToken && viewerUserId != null && sellerKey === String(viewerUserId)) {
+    const orders = await fetchSellerOrders(accessToken);
+    if (orders.length > 0) card = mergeSellerOrdersIntoStudyCard(card, orders);
+  }
+  return card;
 }
 
 export default function StudyDetail() {
@@ -71,6 +93,7 @@ export default function StudyDetail() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const storeUser = useUserStore((state) => state.user);
+  const refreshAccessToken = useUserStore((state) => state.refreshAccessToken);
   const currentUser = storeUser;
   const accessToken = storeUser?.token?.accessToken ?? '';
 
@@ -82,6 +105,16 @@ export default function StudyDetail() {
   const [isBookmarking, setIsBookmarking] = useState(false);
   const [applyMessage, setApplyMessage] = useState('');
   const [chatInput, setChatInput] = useState('');
+  const [hasAppliedLocal, setHasAppliedLocal] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
+
+  type StudyMessage = {
+    id: string;
+    userId: number | string;
+    userName: string;
+    content: string;
+  };
+  const [messages, setMessages] = useState<StudyMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const defaultTab = searchParams.get('tab') ?? 'chat';
@@ -94,9 +127,9 @@ export default function StudyDetail() {
   // TODO: lib 연결 후 실제 fetch 로직으로 교체
   useEffect(() => {
     let cancelled = false;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+
     setLoading(true);
-    fetchProductByIdAPI(id, accessToken)
+    fetchProductByIdAPI(id, accessToken, currentUser?._id ?? null)
       .then((apiStudy) => {
         if (!cancelled) setStudy(apiStudy ?? null);
       })
@@ -109,9 +142,23 @@ export default function StudyDetail() {
     return () => {
       cancelled = true;
     };
-  }, [id, accessToken]);
+  }, [id, accessToken, currentUser?._id]);
 
-  const messages = useMemo(() => (study ? getMessagesForStudy(study.id) : []), [study]);
+  // 호스트가 관리 탭을 열 때 최신 신청 목록 반영 (isHost는 아래에서 계산되므로 여기서 동일 조건으로 판별)
+  useEffect(() => {
+    if (!study || activeTab !== 'manage' || !currentUser) return;
+    const userIdStr = String(currentUser._id);
+    const isHostUser =
+      (study.hostId && study.hostId === userIdStr) || (study.sellerId && study.sellerId === userIdStr);
+    if (!isHostUser) return;
+    let cancelled = false;
+    fetchProductByIdAPI(id, accessToken, currentUser._id).then((u) => {
+      if (!cancelled && u) setStudy(u);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, study, currentUser, id, accessToken]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -131,16 +178,24 @@ export default function StudyDetail() {
   }, [isDeleteDiallogOpen]);
 
   const handleSendMessage = () => {
-    if (!chatInput.trim() || !study) return;
-    sendMessage(study.id, chatInput.trim());
+    if (!chatInput.trim() || !study || !currentUser) return;
+
+    const newMessage: StudyMessage = {
+      id: `${Date.now()}`,
+      userId: currentUser._id,
+      userName: currentUser.name ?? '나',
+      content: chatInput.trim(),
+    };
+
+    setMessages((prev) => [...prev, newMessage]);
     setChatInput('');
   };
 
   if (loading) {
     return (
-      <div className="pageWrapper">
-        <main className="main">
-          <p className="centerMessage">로딩 중...</p>
+      <div className={styles.pageWrapper}>
+        <main className={styles.main}>
+          <p className={styles.centerMessage}>로딩 중...</p>
         </main>
       </div>
     );
@@ -148,11 +203,11 @@ export default function StudyDetail() {
 
   if (!study) {
     return (
-      <div className="pageWrapper">
-        <main className="main">
-          <p className="centerTitle">스터디를 찾을 수 없습니다</p>
-          <div style={{ textAlign: 'center' }}>
-            <Link href="/" className="btnPrimary" style={{ display: 'inline-flex', width: 'auto' }}>
+      <div className={styles.pageWrapper}>
+        <main className={styles.main}>
+          <p className={styles.centerTitle}>스터디를 찾을 수 없습니다</p>
+          <div className={styles.errorActions}>
+            <Link href="/" className={`${styles.btnPrimary} ${styles.btnPrimaryInline} ${styles.btnPrimaryAsLink}`}>
               홈으로 돌아가기
             </Link>
           </div>
@@ -162,16 +217,21 @@ export default function StudyDetail() {
   }
 
   // 역할 계산
-  const isHost = Boolean(currentUser && study.hostId && String(study.hostId) === String(currentUser._id));
+  const userIdStr = currentUser ? String(currentUser._id) : '';
+  const isHost = Boolean(currentUser && ((study.hostId && study.hostId === userIdStr) || (study.sellerId && study.sellerId === userIdStr)));
   const isApprovedParticipant = currentUser ? study.participants.some((p) => String(p.userId) === String(currentUser._id) && p.status === 'approved') : false;
   const canViewChat = isHost || isApprovedParticipant;
-  const hasApplied = currentUser ? study.participants.some((p) => String(p.userId) === String(currentUser._id)) : false;
-  const isFull = study.currentMembers >= study.maxMembers;
+  const hasAppliedFromServer = currentUser ? study.participants.some((p) => String(p.userId) === String(currentUser._id)) : false;
+  const hasApplied = hasAppliedFromServer || hasAppliedLocal;
+  const isFull = study.maxMembers > 0 && study.currentMembers >= study.maxMembers;
   const canApply = !isHost && !hasApplied && !study.isClosed && !isFull;
+  const pendingManageCount = isHost ? study.participants.filter((p) => p.status === 'pending').length : 0;
 
   // 모집 상태 뱃지 클래스
   const statusBadgeClass = study.isClosed ? 'badgeMuted' : isFull ? 'badgeAmber' : 'badgeDefault';
   const statusLabel = study.isClosed ? '모집 마감' : isFull ? '인원 마감' : '모집중';
+  // 카테고리 배지: category가 없으면 첫 번째 태그, 둘 다 없으면 표시하지 않음
+  const categoryLabel = study.category || (study.tags && study.tags[0]) || '';
 
   const handleBookmark = async () => {
     if (!accessToken || isBookmarking) return;
@@ -187,71 +247,199 @@ export default function StudyDetail() {
     }
   };
 
-  const handleApply = () => {
-    if (!applyMessage.trim()) return;
-    applyToStudy(study.id, applyMessage.trim());
-    setApplyMessage('');
-    setIsApplyDialogOpen(false);
-    fetchProductByIdAPI(study.id, accessToken).then((u) => u && setStudy(u));
+  const handleApply = async () => {
+    if (!applyMessage.trim() || !study) return;
+    if (!accessToken) {
+      toast.error('로그인이 필요합니다.');
+      return;
+    }
+    setIsApplying(true);
+    try {
+      const formData = new FormData();
+      formData.set('accessToken', accessToken);
+      const rawId = study.id;
+      const numericId = typeof rawId === 'number' ? rawId : Number(rawId);
+      const line =
+        Number.isFinite(numericId) && numericId > 0 ? { _id: numericId, quantity: 1 } : { _id: rawId, quantity: 1 };
+      formData.set('products', JSON.stringify([line]));
+      formData.set('extra', JSON.stringify({ message: applyMessage.trim(), type: 'study' }));
+
+      const result = await createApply(null, formData);
+      if (result?.ok === 1) {
+        toast.success(result.message);
+        setApplyMessage('');
+        setIsApplyDialogOpen(false);
+        setHasAppliedLocal(true);
+        const u = await fetchProductByIdAPI(study.id, accessToken, storeUser?._id ?? null);
+        if (u) setStudy(u);
+      } else {
+        toast.error(result?.message ?? '신청에 실패했습니다.');
+      }
+    } finally {
+      setIsApplying(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!study || !accessToken) return;
+
+    // 삭제 다이얼로그에서 이미 한 번 확인했으므로 추가 confirm 없이 바로 진행
+    setIsDeleteDialogOpen(false);
+
+    // 최신 상품 상세를 다시 조회해서 _id 기준으로 삭제 (id가 0이거나 undefined인 예전 데이터 대비)
+    const detail = await getStudyDetail(id, accessToken);
+    if (!('ok' in detail) || detail.ok === 0 || !detail.item) {
+      toast.error('스터디 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+    const apiStudy: ApiStudy = detail.item;
+    const productId = String(apiStudy._id ?? apiStudy.id ?? id);
+    if (!productId || productId === 'undefined') {
+      toast.error('삭제할 상품 _id를 찾을 수 없습니다.');
+      return;
+    }
+
+    const result = await deleteStudyProduct(accessToken, productId);
+    if (result?.ok === 1) {
+      toast.success(result.message);
+      router.push('/');
+    } else {
+      toast.error(result?.message ?? '스터디 삭제에 실패했습니다. 다시 시도해주세요.');
+    }
+  };
+
+  const handleParticipantDecision = async (_studyId: string, participantId: string, action: 'approve' | 'rejected') => {
+    if (!accessToken || !study) {
+      toast.error('로그인이 필요합니다.');
+      return;
+    }
+    const decision = action === 'approve' ? 'approved' : 'rejected';
+    const result = await applyParticipantDecision(String(study.id), accessToken, participantId, decision);
+    if (result.ok) {
+      toast.success(decision === 'approved' ? '참여를 승인했습니다.' : '신청을 거절했습니다.');
+      const u = await fetchProductByIdAPI(id, accessToken, currentUser?._id ?? null);
+      if (u) setStudy(u);
+    } else {
+      toast.error(result.message ?? '처리에 실패했습니다.');
+    }
+  };
+
+  const handleToggleClosed = async () => {
+    if (!study || !accessToken) return;
+
+    const nextClosed = !study.isClosed;
+    // 낙관적 업데이트
+    setStudy({ ...study, isClosed: nextClosed });
+
+    // 서버에서 최신 extra를 가져와 isClosed만 토글해서 전송 (기존 필드 보존)
+    const detail = await getStudyDetail(id);
+    if (!('ok' in detail) || detail.ok === 0 || !detail.item) {
+      setStudy((prev) => (prev ? { ...prev, isClosed: !nextClosed } : prev));
+      toast.error('모집 상태를 불러오지 못했습니다.');
+      return;
+    }
+
+    const apiStudy: ApiStudy = detail.item;
+    const apiExtra: Partial<StudyExtra> = apiStudy.extra ?? {};
+
+    const mergedExtra = {
+      ...apiExtra,
+      // 모집 상태
+      isClosed: nextClosed,
+      // 모집 인원
+      maxMembers: apiExtra.maxMembers ?? study.maxMembers,
+      // 일정/장소/기간 정보 유지
+      schedule: apiExtra.schedule ?? study.schedule,
+      location: apiExtra.location ?? study.location,
+      startDate: apiExtra.startDate ?? study.startDate ?? undefined,
+      endDate: apiExtra.endDate ?? study.endDate ?? undefined,
+    };
+    const productId = String(apiStudy._id ?? id);
+
+    let ok = await updateStudyAPI(productId, { extra: mergedExtra }, accessToken);
+
+    // 토큰 만료(401)로 실패한 경우 갱신 후 재시도
+    if (!ok) {
+      const refreshed = await refreshAccessToken();
+
+      // 갱신 실패 = 리프레시 토큰 만료 → resetUser()가 호출되어 로그아웃 상태가 됨
+      // 이 경우 isHost가 false가 되어 버튼이 사라지므로 먼저 rollback + toast 처리
+      if (!refreshed) {
+        setStudy((prev) => (prev ? { ...prev, isClosed: !nextClosed } : prev));
+        toast.error('로그인이 만료되었습니다. 다시 로그인해주세요.');
+        return;
+      }
+
+      const newToken = useUserStore.getState().user?.token?.accessToken ?? '';
+      ok = await updateStudyAPI(productId, { extra: mergedExtra }, newToken);
+    }
+
+    if (!ok) {
+      // 실패 시 원래 상태로 롤백
+      setStudy((prev) => (prev ? { ...prev, isClosed: !nextClosed } : prev));
+      toast.error('모집 상태 변경에 실패했습니다.');
+    } else {
+      toast.success(nextClosed ? '모집을 마감했습니다.' : '모집을 다시 시작했습니다.');
+    }
   };
 
   return (
-    <div className="pageWrapper">
-      <ToastContainer />
+    <div className={styles.pageWrapper}>
+      <ToastContainer position="top-right" />
 
-      <main className="main">
+      <main className={styles.main}>
         {/* 뒤로가기 */}
-        <Link href="/" className="backButton">
+        <Link href="/" className={styles.backButton}>
           <FiArrowLeft size={16} />
           목록으로
         </Link>
 
-        <div className="grid">
+        <div className={styles.grid}>
           {/* ── 왼쪽 ── */}
-          <div className="leftCol">
+          <div className={styles.leftCol}>
             {/* 뱃지 */}
             <div>
-              <div className="badgeRow">
-                <span className={`badge ${statusBadgeClass}`}>{statusLabel}</span>
-                <span className="badge badgeOutline">{study.category}</span>
+              <div className={styles.badgeRow}>
+                <span className={`${styles.badge} ${styles[statusBadgeClass]}`}>{statusLabel}</span>
+                {categoryLabel && <span className={`${styles.badge} ${styles.badgeOutline}`}>{categoryLabel}</span>}
               </div>
 
               {/* 제목 */}
-              <h1 className="studyTitle">{study.title}</h1>
+              <h1 className={styles.studyTitle}>{study.title}</h1>
 
               {/* 호스트 */}
-              <div className="hostRow">
-                <div className="avatar">{(study.hostName || '스터디장').charAt(0)}</div>
+              <div className={styles.hostRow}>
+                <div className={styles.avatar}>{(study.hostName || '스터디장').charAt(0)}</div>
                 <div>
-                  <p className="hostName">{study.hostName || '스터디장'}</p>
-                  <p className="hostRole">스터디장</p>
+                  <p className={styles.hostName}>{study.hostName || '스터디장'}</p>
+                  <p className={styles.hostRole}>스터디장</p>
                 </div>
               </div>
 
               {/* 태그 + 북마크 */}
-              <div className="tagRow">
-                <div className="tagList">
+              <div className={styles.tagRow}>
+                <div className={styles.tagList}>
                   {study.tags.map((tag) => (
-                    <span key={tag} className="badge badgeSecondary">
+                    <span key={tag} className={`${styles.badge} ${styles.badgeSecondary}`}>
                       {tag}
                     </span>
                   ))}
                 </div>
                 {currentUser && (
-                  <button className={`bookmarkBtn ${isBookmarked ? 'bookmarkBtnActive' : ''}`} onClick={handleBookmark} disabled={isBookmarking || isBookmarked}>
-                    <FiHeart className={`bookmarkIcon ${isBookmarked ? 'bookmarkIconFilled' : ''}`} />
+                  <button className={`${styles.bookmarkBtn} ${isBookmarked ? styles.bookmarkBtnActive : ''}`} onClick={handleBookmark} disabled={isBookmarking || isBookmarked}>
+                    <FiHeart className={`${styles.bookmarkIcon} ${isBookmarked ? styles.bookmarkIconFilled : ''}`} />
                   </button>
                 )}
               </div>
 
-              <p className="description">{study.description}</p>
+              <p className={styles.description}>{study.description}</p>
             </div>
 
             {/* ── 탭 ── */}
-            <div className="tabWrapper">
-              <div className={`tabList ${!isHost ? 'tabList2col' : ''}`}>
+            <div className={styles.tabWrapper}>
+              <div className={`${styles.tabList} ${!isHost ? styles.tabList2col : ''}`}>
                 {(['chat', 'map', ...(isHost ? ['manage'] : [])] as string[]).map((tab) => (
-                  <button key={tab} className={`tabTrigger ${activeTab === tab ? 'tabTriggerActive' : ''}`} onClick={() => setActiveTab(tab)}>
+                  <button key={tab} className={`${styles.tabTrigger} ${activeTab === tab ? styles.tabTriggerActive : ''}`} onClick={() => setActiveTab(tab)}>
                     {tab === 'chat' && (
                       <>
                         <FiMessageCircle size={16} />
@@ -268,6 +456,7 @@ export default function StudyDetail() {
                       <>
                         <FiSettings size={16} />
                         관리
+                        {pendingManageCount > 0 && <span className={styles.tabPendingBadge}>{pendingManageCount}</span>}
                       </>
                     )}
                   </button>
@@ -276,24 +465,24 @@ export default function StudyDetail() {
 
               {/* 채팅 탭 */}
               {activeTab === 'chat' && (
-                <div className="tabContent">
-                  <div className="chatCard">
+                <div className={styles.tabContent}>
+                  <div className={styles.chatCard}>
                     {!canViewChat ? (
-                      <div className="chatLocked">{currentUser ? '참여 승인 후 채팅을 이용할 수 있습니다.' : '채팅하려면 로그인 후 스터디에 참여해주세요.'}</div>
+                      <div className={styles.chatLocked}>{currentUser ? '참여 승인 후 채팅을 이용할 수 있습니다.' : '채팅하려면 로그인 후 스터디에 참여해주세요.'}</div>
                     ) : (
                       <>
-                        <div ref={scrollRef} className="chatMessages">
+                        <div ref={scrollRef} className={styles.chatMessages}>
                           {messages.length === 0 ? (
-                            <p style={{ textAlign: 'center', fontSize: '0.875rem', color: '#9ca3af', marginTop: '2rem' }}>첫 메시지를 보내보세요!</p>
+                            <p className={styles.chatEmptyHint}>첫 메시지를 보내보세요!</p>
                           ) : (
                             messages.map((msg) => {
                               const isMine = storeUser?._id === msg.userId;
                               return (
-                                <div key={msg.id} className={`msgRow ${isMine ? 'msgRowMine' : ''}`}>
-                                  <div className="msgAvatar">{(msg.userName || '').charAt(0)}</div>
-                                  <div className={`msgBody ${isMine ? 'msgBodyMine' : ''}`}>
-                                    <span className="msgName">{msg.userName}</span>
-                                    <div className={`msgBubble ${isMine ? 'msgBubbleMine' : 'msgBubbleOther'}`}>{msg.content}</div>
+                                <div key={msg.id} className={`${styles.msgRow} ${isMine ? styles.msgRowMine : ''}`}>
+                                  <div className={styles.msgAvatar}>{(msg.userName || '').charAt(0)}</div>
+                                  <div className={`${styles.msgBody} ${isMine ? styles.msgBodyMine : ''}`}>
+                                    <span className={styles.msgName}>{msg.userName}</span>
+                                    <div className={`${styles.msgBubble} ${isMine ? styles.msgBubbleMine : styles.msgBubbleOther}`}>{msg.content}</div>
                                   </div>
                                 </div>
                               );
@@ -301,9 +490,9 @@ export default function StudyDetail() {
                           )}
                         </div>
                         {storeUser && (
-                          <div className="chatInputRow">
-                            <input className="chatInput" value={chatInput} onChange={(e) => setChatInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} placeholder="메시지를 입력하세요..." />
-                            <button className="chatSendBtn" onClick={handleSendMessage} disabled={!chatInput.trim()}>
+                          <div className={styles.chatInputRow}>
+                            <input className={styles.chatInput} value={chatInput} onChange={(e) => setChatInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} placeholder="메시지를 입력하세요..." />
+                            <button className={styles.chatSendBtn} onClick={handleSendMessage} disabled={!chatInput.trim()}>
                               <FiSend size={16} />
                             </button>
                           </div>
@@ -316,95 +505,97 @@ export default function StudyDetail() {
 
               {/* 위치 탭 */}
               {activeTab === 'map' && (
-                <div className="tabContent">
+                <div className={styles.tabContent}>
                   <StudyMap location={study.location} />
                 </div>
               )}
 
               {/* 관리 탭 */}
               {isHost && activeTab === 'manage' && (
-                <div className="tabContent">
-                  <ParticipantManage study={study} updateParticipantStatus={() => {}} />
+                <div className={styles.tabContent}>
+                  <ParticipantManage study={study} updateParticipantStatus={handleParticipantDecision} />
                 </div>
               )}
             </div>
           </div>
 
           {/* ── 사이드바 ── */}
-          <aside className="aside">
+          <aside className={styles.aside}>
             {/* 스터디 정보 카드 */}
-            <div className="infoCard">
-              <div className="infoCardHeader">
-                <p className="infoCardTitle">스터디 정보</p>
+            <div className={styles.infoCard}>
+              <div className={styles.infoCardHeader}>
+                <p className={styles.infoCardTitle}>스터디 정보</p>
               </div>
-              <div className="infoCardBody">
-                <div className="infoRow">
-                  <FiUsers className="infoIcon" />
-                  <div>
-                    <p className="infoLabel">모집 인원</p>
-                    <p className="infoValue">
+              <div className={styles.infoCardBody}>
+                <div className={styles.infoRow}>
+                  <FiUsers className={styles.infoIcon} aria-hidden />
+                  <div className={styles.infoTextCol}>
+                    <p className={styles.infoLabel}>모집 인원</p>
+                    <p className={styles.infoValue}>
                       {study.currentMembers} / {study.maxMembers}명
                     </p>
                   </div>
                 </div>
-                <div className="infoRow">
-                  <FiClock className="infoIcon" />
-                  <div>
-                    <p className="infoLabel">일정</p>
-                    <p className="infoValue">{study.schedule}</p>
+                <div className={styles.infoRow}>
+                  <FiClock className={styles.infoIcon} aria-hidden />
+                  <div className={styles.infoTextCol}>
+                    <p className={styles.infoLabel}>일정</p>
+                    <p className={styles.infoValue}>{study.schedule}</p>
                   </div>
                 </div>
-                <div className="infoRow">
-                  <FiCalendar className="infoIcon" />
-                  <div>
-                    <p className="infoLabel">기간</p>
-                    <p className="infoValue">
+                <div className={styles.infoRow}>
+                  <FiCalendar className={styles.infoIcon} aria-hidden />
+                  <div className={styles.infoTextCol}>
+                    <p className={styles.infoLabel}>기간</p>
+                    <p className={styles.infoValue}>
                       {study.startDate && !Number.isNaN(new Date(study.startDate).getTime()) ? format(new Date(study.startDate), 'yyyy.MM.dd', { locale: ko }) : study.startDate || '-'}
                       {study.endDate && !Number.isNaN(new Date(study.endDate).getTime()) && ` - ${format(new Date(study.endDate), 'yyyy.MM.dd', { locale: ko })}`}
                       {study.endDate && Number.isNaN(new Date(study.endDate).getTime()) && ` - ${study.endDate}`}
                     </p>
                   </div>
                 </div>
-                <div className="infoRow">
-                  <FiMapPin className="infoIcon" />
-                  <div>
-                    <p className="infoLabel">장소</p>
-                    <p className="infoValue">{study.location.name}</p>
+                <div className={styles.infoRow}>
+                  <FiMapPin className={styles.infoIcon} aria-hidden />
+                  <div className={styles.infoTextCol}>
+                    <p className={styles.infoLabel}>장소</p>
+                    <p className={styles.infoValue}>{study.location.name}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* 참여 신청 버튼 */}
-            {canApply && (
-              <button className="btnPrimary" onClick={() => setIsApplyDialogOpen(true)}>
-                <FiUserPlus size={16} />
-                참여 신청하기
-              </button>
-            )}
+            {/* 참여 신청 / 신청 상태 버튼 */}
+            {!isHost && !study.isClosed && (
+              <>
+                <button className={styles.btnPrimary} onClick={() => !hasApplied && setIsApplyDialogOpen(true)} disabled={hasApplied || isFull}>
+                  <FiUserPlus size={16} />
+                  {hasApplied ? '참여 승인중' : isFull ? '모집 마감' : '참여 신청하기'}
+                </button>
 
-            {/* 신청 완료 안내 */}
-            {hasApplied && !isHost && (
-              <div className="appliedCard">
-                <p className="appliedText">
-                  참여 신청이 완료되었습니다.
-                  <br />
-                  스터디장의 승인을 기다려주세요.
-                </p>
-              </div>
+                {/* 신청 완료 안내 */}
+                {hasApplied && (
+                  <div className={styles.appliedCard}>
+                    <p className={styles.appliedText}>
+                      참여 신청이 완료되었습니다.
+                      <br />
+                      스터디장의 승인을 기다려주세요.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
 
             {/* 호스트 전용 버튼 */}
             {isHost && (
               <>
-                <button className={study.isClosed ? 'btnPrimary' : 'btnOutline'} onClick={() => toggleStudyClosed(study.id)}>
+                <button className={study.isClosed ? styles.btnPrimary : styles.btnOutline} onClick={handleToggleClosed}>
                   {study.isClosed ? '모집 재개하기' : '모집 마감하기'}
                 </button>
-                <button className="btnOutline" onClick={() => router.push(`/study/${study.id}/edit`)}>
+                <button className={styles.btnOutline} onClick={() => router.push(`/study/${id}/edit`)}>
                   <FiEdit2 size={15} />
                   스터디 수정
                 </button>
-                <button className="btnDestructive" onClick={() => setIsDeleteDialogOpen(true)}>
+                <button className={styles.btnDestructive} onClick={() => setIsDeleteDialogOpen(true)}>
                   <FiTrash2 size={15} />
                   스터디 삭제
                 </button>
@@ -415,35 +606,29 @@ export default function StudyDetail() {
       </main>
 
       {/* ── 참여 신청 다이얼로그 ── */}
-      <dialog ref={applyDialogRef} className="dialog" onClose={() => setIsApplyDialogOpen(false)}>
-        <p className="dialogTitle">스터디 참여 신청</p>
-        <p className="dialogDesc">스터디장에게 전달할 메시지를 작성해주세요.</p>
-        <textarea className="dialogTextarea" rows={4} placeholder="자기소개, 참여 동기 등을 적어주세요." value={applyMessage} onChange={(e) => setApplyMessage(e.target.value)} />
-        <div className="dialogFooter">
-          <button className="dialogBtnOutline" onClick={() => setIsApplyDialogOpen(false)}>
+      <dialog ref={applyDialogRef} className={styles.dialog} onClose={() => setIsApplyDialogOpen(false)}>
+        <p className={styles.dialogTitle}>스터디 참여 신청</p>
+        <p className={styles.dialogDesc}>스터디장에게 전달할 메시지를 작성해주세요.</p>
+        <textarea className={styles.dialogTextarea} rows={4} placeholder="자기소개, 참여 동기 등을 적어주세요." value={applyMessage} onChange={(e) => setApplyMessage(e.target.value)} />
+        <div className={styles.dialogFooter}>
+          <button type="button" className={styles.dialogBtnOutline} onClick={() => setIsApplyDialogOpen(false)}>
             취소
           </button>
-          <button className="dialogBtnPrimary" onClick={handleApply} disabled={!applyMessage.trim()}>
-            신청하기
+          <button type="button" className={styles.dialogBtnPrimary} onClick={() => void handleApply()} disabled={!applyMessage.trim() || isApplying}>
+            {isApplying ? '처리 중…' : '신청하기'}
           </button>
         </div>
       </dialog>
 
       {/* ── 삭제 확인 다이얼로그 ── */}
-      <dialog ref={deleteDialogRef} className="dialog" onClose={() => setIsDeleteDialogOpen(false)}>
-        <p className="dialogTitle">스터디 삭제</p>
-        <p className="dialogDesc">정말 이 스터디를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.</p>
-        <div className="dialogFooter">
-          <button className="dialogBtnOutline" onClick={() => setIsDeleteDialogOpen(false)}>
+      <dialog ref={deleteDialogRef} className={styles.dialog} onClose={() => setIsDeleteDialogOpen(false)}>
+        <p className={styles.dialogTitle}>스터디 삭제</p>
+        <p className={styles.dialogDesc}>정말 이 스터디를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.</p>
+        <div className={styles.dialogFooter}>
+          <button type="button" className={styles.dialogBtnOutline} onClick={() => setIsDeleteDialogOpen(false)}>
             취소
           </button>
-          <button
-            className="dialogBtnDestructive"
-            onClick={() => {
-              deleteStudy(study.id);
-              router.push('/');
-            }}
-          >
+          <button type="button" className={styles.dialogBtnDestructive} onClick={handleDelete}>
             삭제
           </button>
         </div>

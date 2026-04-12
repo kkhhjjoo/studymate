@@ -35,7 +35,7 @@ export interface StudyExtra {
   type?: string;
   category: string;
   tags: string[];
-  maxMembers: number;
+  maxMembers?: number;
   hostId: string;
   hostName: string;
   location: StudyLocation;
@@ -44,6 +44,9 @@ export interface StudyExtra {
   endDate: string;
   isClosed: boolean;
   participant: Participant[];
+  /** 폼/API에서 자유 입력으로 쓰는 필드 */
+  age?: string;
+  gender?: string;
 }
 
 /** API Study를 UI 카드용 평탄화 데이터로 변환한 타입 */
@@ -51,6 +54,7 @@ export interface StudyCardData {
   id: number | string;
   title: string;
   hostId: string;
+  sellerId: string; // extra.hostId 없는 기존 스터디 대비 seller._id 직접 저장
   hostName: string;
   category: string;
   tags: string[];

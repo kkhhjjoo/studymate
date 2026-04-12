@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { type ChangeEvent, useEffect, useState } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import './Login.css';
+import styles from './Login.module.css';
 
 /** 환경변수: API 서버 주소와 클라이언트 식별자 */
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
@@ -228,30 +228,30 @@ const Login = () => {
 
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '';
   const content = (
-    <div className="container">
+    <div className={styles.container}>
       <ToastContainer />
-      <div className="wrapper">
-        <form onSubmit={handleSubmit} className="form">
+      <div className={styles.wrapper}>
+        <form onSubmit={handleSubmit} className={styles.form}>
           {/* 이메일 */}
           <div>
-            <label className="label">이메일</label>
-            <input type="email" name="email" placeholder="이메일" value={formData.email} onChange={handleChange} className="input" />
+            <label className={styles.label}>이메일</label>
+            <input type="email" name="email" placeholder="이메일" value={formData.email} onChange={handleChange} className={styles.input} />
           </div>
 
           {/* 비밀번호 */}
           <div>
-            <label className="fieldGroup">비밀번호</label>
-            <input type="password" name="password" placeholder="비밀번호" value={formData.password} onChange={handleChange} className="input" />
+            <label className={styles.fieldGroup}>비밀번호</label>
+            <input type="password" name="password" placeholder="비밀번호" value={formData.password} onChange={handleChange} className={styles.input} />
           </div>
 
           {/* 로그인 버튼 + 회원가입 링크 */}
-          <div className="formButton">
-            <button type="submit" disabled={isSubmitting} className="submitButton">
+          <div className={styles.formButton}>
+            <button type="submit" disabled={isSubmitting} className={styles.submitButton}>
               {isSubmitting ? '로그인 중...' : 'Login'}
             </button>
-            <p className="signupText">
+            <p className={styles.signupText}>
               아직 계정이 없으세요?{' '}
-              <a href="/signup" className="signupLink">
+              <a href="/signup" className={styles.signupLink}>
                 회원가입 하기
               </a>
             </p>
@@ -259,11 +259,11 @@ const Login = () => {
         </form>
 
         {/* 구글 로그인 */}
-        <div className="divider">
-          <p className="dividerText">- 또는 -</p>
+        <div className={styles.divider}>
+          <p className={styles.dividerText}>- 또는 -</p>
           {clientId ? (
-            <div className="googleWrapper">
-              {isGoogleLoading && <p className="googleLoadingText">구글 로그인 중...</p>}
+            <div className={styles.googleWrapper}>
+              {isGoogleLoading && <p className={styles.googleLoadingText}>구글 로그인 중...</p>}
               {/* 구글 OAuth 로그인 버튼 */}
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
@@ -275,7 +275,7 @@ const Login = () => {
             </div>
           ) : (
             // 환경변수 미설정 시 안내 메시지 표시
-            <p className="googleEnvNotice">Google 로그인을 사용하려면 .env에 NEXT_PUBLIC_GOOGLE_CLIENT_ID를 설정해주세요.</p>
+            <p className={styles.googleEnvNotice}>Google 로그인을 사용하려면 .env에 NEXT_PUBLIC_GOOGLE_CLIENT_ID를 설정해주세요.</p>
           )}
         </div>
       </div>

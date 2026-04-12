@@ -4,6 +4,7 @@ import useUserStore from '@/zustand/userStore';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
+import styles from './SignUp.module.css';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const CLIENT_ID = process.env.NEXT_PUBLIC_CLIENT_ID;
@@ -212,72 +213,65 @@ const SignUp = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFF] flex items-center justify-center px-4">
+    <div className={styles.page}>
       <ToastContainer />
-      <div className="w-full max-w-md">
-        <form onSubmit={handleSubmit} className="space-y-5">
+      <div className={styles.container}>
+        <form onSubmit={handleSubmit} className={styles.form}>
           {/* 이메일 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-800 mb-1">Email address</label>
-            <div className="flex gap-2">
-              <input type="email" name="email" placeholder="Enter email" value={formData.email} onChange={handleChange} className="flex-1 border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-500 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300" />
-              <button type="button" onClick={checkEmailDuplicate} className="px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 whitespace-nowrap">
+          <div className={styles.field}>
+            <label className={styles.label}>Email address</label>
+            <div className={styles.inputRow}>
+              <input type="email" name="email" placeholder="Enter email" value={formData.email} onChange={handleChange} className={styles.inputFlex} />
+              <button type="button" onClick={checkEmailDuplicate} className={styles.checkBtn}>
                 중복확인
               </button>
             </div>
-            {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
-            {successMessages.email && <p className="mt-1 text-xs text-green-600">{successMessages.email}</p>}
+            {errors.email && <p className={styles.errorMsg}>{errors.email}</p>}
+            {successMessages.email && <p className={styles.successMsg}>{successMessages.email}</p>}
           </div>
 
           {/* 비밀번호 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-800 mb-1">Password</label>
-            <input type="password" name="password" placeholder="Password" value={formData.password} onChange={handleChange} className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-500 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300" />
-            {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
+          <div className={styles.field}>
+            <label className={styles.label}>Password</label>
+            <input type="password" name="password" placeholder="Password" value={formData.password} onChange={handleChange} className={styles.input} />
+            {errors.password && <p className={styles.errorMsg}>{errors.password}</p>}
           </div>
 
           {/* 비밀번호 확인 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-800 mb-1">Confirm Password</label>
-            <input
-              type="password"
-              name="passwordConfirm"
-              placeholder="Confirm Password"
-              value={formData.passwordConfirm}
-              onChange={handleChange}
-              className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-500 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
-            />
-            {errors.passwordConfirm && <p className="mt-1 text-xs text-red-500">{errors.passwordConfirm}</p>}
+          <div className={styles.field}>
+            <label className={styles.label}>Confirm Password</label>
+            <input type="password" name="passwordConfirm" placeholder="Confirm Password" value={formData.passwordConfirm} onChange={handleChange} className={styles.input} />
+            {errors.passwordConfirm && <p className={styles.errorMsg}>{errors.passwordConfirm}</p>}
           </div>
 
           {/* 이름 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-800 mb-1">name</label>
-            <div className="flex gap-2">
-              <input type="text" name="name" placeholder="Name" value={formData.name} onChange={handleChange} className="flex-1 border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-500 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300" />
-              <button type="button" onClick={checkNameDuplicate} className="px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 whitespace-nowrap">
+          <div className={styles.field}>
+            <label className={styles.label}>name</label>
+            <div className={styles.inputRow}>
+              <input type="text" name="name" placeholder="Name" value={formData.name} onChange={handleChange} className={styles.inputFlex} />
+              <button type="button" onClick={checkNameDuplicate} className={styles.checkBtn}>
                 중복확인
               </button>
             </div>
-            {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
-            {successMessages.name && <p className="mt-1 text-xs text-green-600">{successMessages.name}</p>}
+            {errors.name && <p className={styles.errorMsg}>{errors.name}</p>}
+            {successMessages.name && <p className={styles.successMsg}>{successMessages.name}</p>}
           </div>
 
           {/* 지역 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-800 mb-1">Region</label>
-            <input type="text" name="region" placeholder="Region" value={formData.region} onChange={handleChange} className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-500 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300" />
+          <div className={styles.field}>
+            <label className={styles.label}>Region</label>
+            <input type="text" name="region" placeholder="Region" value={formData.region} onChange={handleChange} className={styles.input} />
           </div>
 
           {/* 나이 / 성별 */}
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-800 mb-1">Age</label>
-              <input type="number" name="age" placeholder="Age" value={formData.age} onChange={handleChange} className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-500 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300" />
+          <div className={styles.row}>
+            <div className={styles.half}>
+              <label className={styles.label}>Age</label>
+              <input type="number" name="age" placeholder="Age" value={formData.age} onChange={handleChange} className={styles.input} />
             </div>
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-800 mb-1">Gender</label>
-              <select name="gender" value={formData.gender} onChange={handleChange} className="w-full border border-gray-200 rounded-lg px-4 py-3 bg-white text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-300">
+            <div className={styles.half}>
+              <label className={styles.label}>Gender</label>
+              <select name="gender" value={formData.gender} onChange={handleChange} className={styles.select}>
                 <option value="">Select</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
@@ -286,13 +280,13 @@ const SignUp = () => {
           </div>
 
           {/* 제출 버튼 + 로그인 링크 */}
-          <div className="flex items-center justify-between pt-1">
-            <button type="submit" disabled={isSubmitting} className="px-8 py-3 bg-[#7C3AED] text-white font-semibold rounded-lg hover:bg-[#5B21B6] disabled:opacity-60 transition-colors">
+          <div className={styles.footer}>
+            <button type="submit" disabled={isSubmitting} className={styles.submitBtn}>
               {isSubmitting ? '처리중...' : 'Sign Up'}
             </button>
-            <p className="text-sm text-gray-600">
+            <p className={styles.loginText}>
               이미 계정이 있으세요?{' '}
-              <a href="/login" className="text-blue-500 hover:underline">
+              <a href="/login" className={styles.loginLink}>
                 로그인 하기
               </a>
             </p>

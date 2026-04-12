@@ -4,3 +4,7 @@ variables:
     value: https://fesp-api.koyeb.app/market
   - name: client-id
     value: febc15-final12-ecad
+  - name: accessToken
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOjIsInR5cGUiOiJzZWxsZXIiLCJpYXQiOjE3NzM2NDgxODQsImV4cCI6MTc3MzczNDU4NCwiaXNzIjoiRkVCQyJ9.5IsFLgyqJqoNhYZ3IKsIaESOHLyPALpGsr2OZpYEBrc
+  - name: refreshToken
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NzM2NDgxODQsImV4cCI6MTc3NjI0MDE4NCwiaXNzIjoiRkVCQyJ9.MKDmAK9WJnYZh8ppX-14uWh97XiDZqUdRMUTEHWaC2A

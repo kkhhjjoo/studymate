@@ -20,16 +20,28 @@ function toStudyCardData(s: Study): StudyCardData {
   return {
     id: s.id,
     title: s.name,
-    hostId: s.extra?.hostId ?? '',
-    hostName: s.extra?.hostName ?? '',
+    hostId: s.extra?.hostId ?? String(s.seller?._id ?? s.seller_id ?? ''),
+    sellerId: String(s.seller?._id ?? s.seller_id ?? ''),
+    hostName: s.extra?.hostName ?? s.seller?.name ?? '스터디장',
     category: s.extra?.category ?? '',
-    maxMembers: s.extra?.maxMembers ?? 0,
-    currentMembers: 0,
+    tags: s.extra?.tags ?? [],
+    maxMembers: s.quantity ?? s.extra?.maxMembers ?? 0,
+    currentMembers: s.buyQuantity ?? 0,
     isClosed: s.extra?.isClosed ?? false,
     description: s.content,
+    schedule: s.extra?.schedule ?? '',
     startDate: s.extra?.startDate,
-    location: s.extra?.location,
-    participants: s.extra?.participant?.map((p) => ({ userId: p.userId, status: p.status })) ?? [],
+    endDate: s.extra?.endDate,
+    location: s.extra?.location ?? { name: '-', lat: 0, lng: 0 },
+    participants:
+      s.extra?.participant?.map((p, idx) => ({
+        id: String(idx),
+        userId: p.userId,
+        userName: p.userName ?? '',
+        status: p.status,
+        message: '',
+        appliedAt: p.joinedAt ?? '',
+      })) ?? [],
   };
 }
 

@@ -1,4 +1,4 @@
-.bookmark-btn {
+.bookmarkBtn {
   background-color: transparent;
   outline: none;
   border: none;
@@ -10,13 +10,13 @@
   border-radius: 4px;
 }
 
-.bookmark-btn:hover .bookmark-off,
-.bookmark-btn:hover .bookmark-on {
+.bookmarkBtn:hover .bookmarkOff,
+.bookmarkBtn:hover .bookmarkOn {
   transform: scale(1.1);
 }
 
-.bookmark-off,
-.bookmark-on {
+.bookmarkOff,
+.bookmarkOn {
   color: #dc2626;
   transition: transform 0.2s ease;
 }

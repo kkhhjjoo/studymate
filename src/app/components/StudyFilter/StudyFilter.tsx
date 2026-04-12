@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import './StudyFilter.css';
+import styles from './StudyFilter.module.css';
 import { regionData } from '@/lib/regionData';
 
 const STUDY_CATEGORIES = ['전체', '개발', '디자인', '어학', '취업', '자격증', '독서', '기타'];
@@ -13,23 +13,16 @@ interface StudyFilterProps {
   filterValues?: Record<string, string>;
 }
 
-const formatDate = (dateString: string) => {
-  if (!dateString) return '';
-  const [, month, day] = dateString.split('-');
-  return `${month}.${day}`;
-};
-
 export default function StudyFilter({ onFilterChanges, showCategory = true, filterValues = {} }: StudyFilterProps) {
-  const [date, setDate] = useState(filterValues.date ?? '');
   const [region, setRegion] = useState(filterValues.region ?? '');
   const [selectedTag, setSelectedTag] = useState(filterValues.tag ?? '');
 
   return (
     <>
-      <div className="study-filter-div">
+      <div className={styles.root}>
         {showCategory && (
-          <div className="study-filter-wrapper study-filter-category-display">
-            <label htmlFor="filter-category" className="study-filter-sr-only">
+          <div className={`${styles.wrapper} ${styles.categoryDisplay}`}>
+            <label htmlFor="filter-category" className={styles.srOnly}>
               카테고리
             </label>
             <select name="카테고리" id="filter-category" defaultValue="" onChange={(e) => onFilterChanges('category', e.target.value)}>
@@ -43,22 +36,19 @@ export default function StudyFilter({ onFilterChanges, showCategory = true, filt
           </div>
         )}
 
-        <div className="study-filter-wrapper study-filter-date-wrapper">
+        <div className={`${styles.wrapper} ${styles.dateWrapper}`}>
           <span aria-hidden="true"></span>
           <input
             type="date"
             id="filter-date"
-            className="study-filter-date-input"
+            className={styles.dateInput}
             min="2026-01-28"
-            onChange={(e) => {
-              setDate(e.target.value);
-              onFilterChanges('date', e.target.value);
-            }}
+            onChange={(e) => onFilterChanges('date', e.target.value)}
           />
         </div>
 
-        <div className="study-filter-wrapper">
-          <label htmlFor="filter-gender" className="study-filter-sr-only">
+        <div className={styles.wrapper}>
+          <label htmlFor="filter-gender" className={styles.srOnly}>
             성별
           </label>
           <select name="성별" id="filter-gender" defaultValue="" onChange={(e) => onFilterChanges('gender', e.target.value)}>
@@ -69,8 +59,8 @@ export default function StudyFilter({ onFilterChanges, showCategory = true, filt
           </select>
         </div>
 
-        <div className="study-filter-wrapper">
-          <label htmlFor="filter-age" className="study-filter-sr-only">
+        <div className={styles.wrapper}>
+          <label htmlFor="filter-age" className={styles.srOnly}>
             나이대
           </label>
           <select name="나이대" id="filter-age" defaultValue="" onChange={(e) => onFilterChanges('age', e.target.value)}>
@@ -82,8 +72,8 @@ export default function StudyFilter({ onFilterChanges, showCategory = true, filt
           </select>
         </div>
 
-        <div className="study-filter-wrapper">
-          <label htmlFor="filter-region" className="study-filter-sr-only">
+        <div className={styles.wrapper}>
+          <label htmlFor="filter-region" className={styles.srOnly}>
             지역
           </label>
           <select
@@ -104,8 +94,8 @@ export default function StudyFilter({ onFilterChanges, showCategory = true, filt
           </select>
         </div>
 
-        <div className="study-filter-wrapper">
-          <label htmlFor="filter-district" className="study-filter-sr-only">
+        <div className={styles.wrapper}>
+          <label htmlFor="filter-district" className={styles.srOnly}>
             시/군/구
           </label>
           <select key={region} id="filter-district" disabled={!region} onChange={(e) => onFilterChanges('district', e.target.value)}>
@@ -119,8 +109,8 @@ export default function StudyFilter({ onFilterChanges, showCategory = true, filt
           </select>
         </div>
 
-        <div className="study-filter-wrapper">
-          <label htmlFor="filter-quantity" className="study-filter-sr-only">
+        <div className={styles.wrapper}>
+          <label htmlFor="filter-quantity" className={styles.srOnly}>
             인원
           </label>
           <select name="인원" id="filter-quantity" defaultValue="" onChange={(e) => onFilterChanges('quantity', e.target.value)}>
@@ -132,8 +122,8 @@ export default function StudyFilter({ onFilterChanges, showCategory = true, filt
           </select>
         </div>
 
-        <div className="study-filter-wrapper">
-          <label htmlFor="filter-recruitment" className="study-filter-sr-only">
+        <div className={styles.wrapper}>
+          <label htmlFor="filter-recruitment" className={styles.srOnly}>
             모집마감
           </label>
           <select name="모집마감" id="filter-recruitment" value={filterValues.recruitmentStatus ?? ''} onChange={(e) => onFilterChanges('recruitmentStatus', e.target.value)}>
@@ -142,13 +132,14 @@ export default function StudyFilter({ onFilterChanges, showCategory = true, filt
           </select>
         </div>
 
-        <div className="study-filter-wrapper">
-          <p className="study-filter-tag-title">인기 태그</p>
-          <div className="study-filter-tag-list">
+        <div className={styles.wrapper}>
+          <p className={styles.tagTitle}>인기 태그</p>
+          <div className={styles.tagList}>
             {POPULAR_TAGS.map((tag) => (
               <button
                 key={tag}
-                className={`study-filter-tag-btn${selectedTag === tag ? ' selected' : ''}`}
+                type="button"
+                className={`${styles.tagBtn} ${selectedTag === tag ? styles.tagBtnSelected : ''}`}
                 onClick={() => {
                   const next = selectedTag === tag ? '' : tag;
                   setSelectedTag(next);

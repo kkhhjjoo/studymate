@@ -30,6 +30,7 @@ export interface ChatRoom {
   roomName: string;
   ownerId: string;
   members: ChatMember[];
+  messages?: ChatMessage[]; // 서버 응답 시 포함될 수 있는 메시지 목록
   updatedAt: string;
   createdAt: string;
 }

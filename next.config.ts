@@ -5,6 +5,14 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/proxy/:path*',
+        destination: 'https://fesp-api.koyeb.app/market/:path*',
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {
