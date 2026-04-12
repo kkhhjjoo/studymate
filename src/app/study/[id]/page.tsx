@@ -15,33 +15,20 @@ import { FiArrowLeft, FiHeart, FiMessageCircle, FiMapPin, FiSettings, FiSend, Fi
 
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import {
-  getStudyDetail,
-  updateStudyAPI,
-  fetchSellerOrders,
-  mergeSellerOrdersIntoStudyCard,
-  applyParticipantDecision,
-} from '@/lib/study';
-import { createApply, deleteStudyProduct } from '@/actions/study';
+import { getStudyDetail, updateStudyAPI, deleteStudyAPI } from '@/lib/study';
 
 const addBookmarkAPI = async (_studyId: number | string, _token: string): Promise<boolean> => false;
 
-function normalizeParticipantStatus(s: unknown): 'pending' | 'approved' | 'rejected' {
-  const v = String(s ?? 'pending').toLowerCase();
-  if (v === 'approved' || v === 'approve') return 'approved';
-  if (v === 'rejected' || v === 'reject' || v === 'denied') return 'rejected';
-  return 'pending';
-}
+const applyToStudy = (_studyId: number | string, _message: string): void => {};
+
+const deleteStudy = (_studyId: number | string): void => {};
 
 function toStudyCardData(s: ApiStudy): StudyCardData {
-  // API는 _id만 주고 id가 비는 경우가 많음 → study.id가 undefined면 링크가 /study/undefined/ 가 됨
-  const stableId = s._id ?? s.id ?? 0;
   return {
-    id: stableId,
+    id: s.id,
     title: s.name,
     // 호스트 정보: extra에 없으면 seller 정보로 보완
     hostId: s.extra?.hostId ?? String((s.seller && s.seller._id) ?? s.seller_id ?? ''),
-    sellerId: String((s.seller && s.seller._id) ?? s.seller_id ?? ''),
     hostName: s.extra?.hostName ?? s.seller?.name ?? '스터디장',
     category: s.extra?.category ?? '',
     tags: s.extra?.tags ?? [],
@@ -55,36 +42,23 @@ function toStudyCardData(s: ApiStudy): StudyCardData {
     endDate: s.extra?.endDate,
     location: s.extra?.location ?? { name: '-', lat: 0, lng: 0 },
     participants:
-      s.extra?.participant?.map((p, idx) => {
-        const row = p as typeof p & { message?: string };
-        return {
-          id: String(row.userId ?? idx),
-          userId: String(row.userId ?? ''),
-          userName: row.userName ?? '',
-          status: normalizeParticipantStatus(row.status),
-          message: row.message ?? '',
-          appliedAt: row.joinedAt ?? '',
-        };
-      }) ?? [],
+      s.extra?.participant?.map((p) => ({
+        id: p.userId,
+        userId: p.userId,
+        userName: p.userName,
+        status: p.status,
+        message: '',
+        appliedAt: p.joinedAt ?? '',
+      })) ?? [],
   };
 }
 
-async function fetchProductByIdAPI(
-  id: string | number,
-  accessToken: string,
-  viewerUserId?: string | number | null
-): Promise<StudyCardData | null> {
-  const res = await getStudyDetail(id, accessToken || undefined);
+async function fetchProductByIdAPI(id: string | number, _accessToken: string): Promise<StudyCardData | null> {
+  const res = await getStudyDetail(id);
   if (!('ok' in res) || res.ok === 0) return null;
   const apiStudy: ApiStudy = res.item;
   if (!apiStudy) return null;
-  let card = toStudyCardData(apiStudy);
-  const sellerKey = card.sellerId || card.hostId;
-  if (accessToken && viewerUserId != null && sellerKey === String(viewerUserId)) {
-    const orders = await fetchSellerOrders(accessToken);
-    if (orders.length > 0) card = mergeSellerOrdersIntoStudyCard(card, orders);
-  }
-  return card;
+  return toStudyCardData(apiStudy);
 }
 
 export default function StudyDetail() {
@@ -93,7 +67,6 @@ export default function StudyDetail() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const storeUser = useUserStore((state) => state.user);
-  const refreshAccessToken = useUserStore((state) => state.refreshAccessToken);
   const currentUser = storeUser;
   const accessToken = storeUser?.token?.accessToken ?? '';
 
@@ -106,7 +79,6 @@ export default function StudyDetail() {
   const [applyMessage, setApplyMessage] = useState('');
   const [chatInput, setChatInput] = useState('');
   const [hasAppliedLocal, setHasAppliedLocal] = useState(false);
-  const [isApplying, setIsApplying] = useState(false);
 
   type StudyMessage = {
     id: string;
@@ -129,7 +101,7 @@ export default function StudyDetail() {
     let cancelled = false;
 
     setLoading(true);
-    fetchProductByIdAPI(id, accessToken, currentUser?._id ?? null)
+    fetchProductByIdAPI(id, accessToken)
       .then((apiStudy) => {
         if (!cancelled) setStudy(apiStudy ?? null);
       })
@@ -142,23 +114,7 @@ export default function StudyDetail() {
     return () => {
       cancelled = true;
     };
-  }, [id, accessToken, currentUser?._id]);
-
-  // 호스트가 관리 탭을 열 때 최신 신청 목록 반영 (isHost는 아래에서 계산되므로 여기서 동일 조건으로 판별)
-  useEffect(() => {
-    if (!study || activeTab !== 'manage' || !currentUser) return;
-    const userIdStr = String(currentUser._id);
-    const isHostUser =
-      (study.hostId && study.hostId === userIdStr) || (study.sellerId && study.sellerId === userIdStr);
-    if (!isHostUser) return;
-    let cancelled = false;
-    fetchProductByIdAPI(id, accessToken, currentUser._id).then((u) => {
-      if (!cancelled && u) setStudy(u);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [activeTab, study, currentUser, id, accessToken]);
+  }, [id, accessToken]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -206,8 +162,8 @@ export default function StudyDetail() {
       <div className={styles.pageWrapper}>
         <main className={styles.main}>
           <p className={styles.centerTitle}>스터디를 찾을 수 없습니다</p>
-          <div className={styles.errorActions}>
-            <Link href="/" className={`${styles.btnPrimary} ${styles.btnPrimaryInline} ${styles.btnPrimaryAsLink}`}>
+          <div style={{ textAlign: 'center' }}>
+            <Link href="/" className="btnPrimary" style={{ display: 'inline-flex', width: 'auto' }}>
               홈으로 돌아가기
             </Link>
           </div>
@@ -217,15 +173,13 @@ export default function StudyDetail() {
   }
 
   // 역할 계산
-  const userIdStr = currentUser ? String(currentUser._id) : '';
-  const isHost = Boolean(currentUser && ((study.hostId && study.hostId === userIdStr) || (study.sellerId && study.sellerId === userIdStr)));
+  const isHost = Boolean(currentUser && study.hostId && String(study.hostId) === String(currentUser._id));
   const isApprovedParticipant = currentUser ? study.participants.some((p) => String(p.userId) === String(currentUser._id) && p.status === 'approved') : false;
   const canViewChat = isHost || isApprovedParticipant;
   const hasAppliedFromServer = currentUser ? study.participants.some((p) => String(p.userId) === String(currentUser._id)) : false;
   const hasApplied = hasAppliedFromServer || hasAppliedLocal;
   const isFull = study.maxMembers > 0 && study.currentMembers >= study.maxMembers;
   const canApply = !isHost && !hasApplied && !study.isClosed && !isFull;
-  const pendingManageCount = isHost ? study.participants.filter((p) => p.status === 'pending').length : 0;
 
   // 모집 상태 뱃지 클래스
   const statusBadgeClass = study.isClosed ? 'badgeMuted' : isFull ? 'badgeAmber' : 'badgeDefault';
@@ -247,37 +201,13 @@ export default function StudyDetail() {
     }
   };
 
-  const handleApply = async () => {
-    if (!applyMessage.trim() || !study) return;
-    if (!accessToken) {
-      toast.error('로그인이 필요합니다.');
-      return;
-    }
-    setIsApplying(true);
-    try {
-      const formData = new FormData();
-      formData.set('accessToken', accessToken);
-      const rawId = study.id;
-      const numericId = typeof rawId === 'number' ? rawId : Number(rawId);
-      const line =
-        Number.isFinite(numericId) && numericId > 0 ? { _id: numericId, quantity: 1 } : { _id: rawId, quantity: 1 };
-      formData.set('products', JSON.stringify([line]));
-      formData.set('extra', JSON.stringify({ message: applyMessage.trim(), type: 'study' }));
-
-      const result = await createApply(null, formData);
-      if (result?.ok === 1) {
-        toast.success(result.message);
-        setApplyMessage('');
-        setIsApplyDialogOpen(false);
-        setHasAppliedLocal(true);
-        const u = await fetchProductByIdAPI(study.id, accessToken, storeUser?._id ?? null);
-        if (u) setStudy(u);
-      } else {
-        toast.error(result?.message ?? '신청에 실패했습니다.');
-      }
-    } finally {
-      setIsApplying(false);
-    }
+  const handleApply = () => {
+    if (!applyMessage.trim()) return;
+    applyToStudy(study.id, applyMessage.trim());
+    setApplyMessage('');
+    setIsApplyDialogOpen(false);
+    setHasAppliedLocal(true);
+    fetchProductByIdAPI(study.id, accessToken).then((u) => u && setStudy(u));
   };
 
   const handleDelete = async () => {
@@ -287,40 +217,20 @@ export default function StudyDetail() {
     setIsDeleteDialogOpen(false);
 
     // 최신 상품 상세를 다시 조회해서 _id 기준으로 삭제 (id가 0이거나 undefined인 예전 데이터 대비)
-    const detail = await getStudyDetail(id, accessToken);
+    const detail = await getStudyDetail(id);
     if (!('ok' in detail) || detail.ok === 0 || !detail.item) {
       toast.error('스터디 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
       return;
     }
     const apiStudy: ApiStudy = detail.item;
     const productId = String(apiStudy._id ?? apiStudy.id ?? id);
-    if (!productId || productId === 'undefined') {
-      toast.error('삭제할 상품 _id를 찾을 수 없습니다.');
-      return;
-    }
 
-    const result = await deleteStudyProduct(accessToken, productId);
-    if (result?.ok === 1) {
-      toast.success(result.message);
+    const ok = await deleteStudyAPI(productId, accessToken);
+    if (ok) {
+      toast.success('스터디가 삭제되었습니다.');
       router.push('/');
     } else {
-      toast.error(result?.message ?? '스터디 삭제에 실패했습니다. 다시 시도해주세요.');
-    }
-  };
-
-  const handleParticipantDecision = async (_studyId: string, participantId: string, action: 'approve' | 'rejected') => {
-    if (!accessToken || !study) {
-      toast.error('로그인이 필요합니다.');
-      return;
-    }
-    const decision = action === 'approve' ? 'approved' : 'rejected';
-    const result = await applyParticipantDecision(String(study.id), accessToken, participantId, decision);
-    if (result.ok) {
-      toast.success(decision === 'approved' ? '참여를 승인했습니다.' : '신청을 거절했습니다.');
-      const u = await fetchProductByIdAPI(id, accessToken, currentUser?._id ?? null);
-      if (u) setStudy(u);
-    } else {
-      toast.error(result.message ?? '처리에 실패했습니다.');
+      toast.error('스터디 삭제에 실패했습니다. 다시 시도해주세요.');
     }
   };
 
@@ -356,24 +266,7 @@ export default function StudyDetail() {
     };
     const productId = String(apiStudy._id ?? id);
 
-    let ok = await updateStudyAPI(productId, { extra: mergedExtra }, accessToken);
-
-    // 토큰 만료(401)로 실패한 경우 갱신 후 재시도
-    if (!ok) {
-      const refreshed = await refreshAccessToken();
-
-      // 갱신 실패 = 리프레시 토큰 만료 → resetUser()가 호출되어 로그아웃 상태가 됨
-      // 이 경우 isHost가 false가 되어 버튼이 사라지므로 먼저 rollback + toast 처리
-      if (!refreshed) {
-        setStudy((prev) => (prev ? { ...prev, isClosed: !nextClosed } : prev));
-        toast.error('로그인이 만료되었습니다. 다시 로그인해주세요.');
-        return;
-      }
-
-      const newToken = useUserStore.getState().user?.token?.accessToken ?? '';
-      ok = await updateStudyAPI(productId, { extra: mergedExtra }, newToken);
-    }
-
+    const ok = await updateStudyAPI(productId, { extra: mergedExtra }, accessToken);
     if (!ok) {
       // 실패 시 원래 상태로 롤백
       setStudy((prev) => (prev ? { ...prev, isClosed: !nextClosed } : prev));
@@ -400,8 +293,8 @@ export default function StudyDetail() {
             {/* 뱃지 */}
             <div>
               <div className={styles.badgeRow}>
-                <span className={`${styles.badge} ${styles[statusBadgeClass]}`}>{statusLabel}</span>
-                {categoryLabel && <span className={`${styles.badge} ${styles.badgeOutline}`}>{categoryLabel}</span>}
+                <span className={`${styles.badge} ${styles.statusBadgeClass}`}>{statusLabel}</span>
+                {categoryLabel && <span className="badge badgeOutline">{categoryLabel}</span>}
               </div>
 
               {/* 제목 */}
@@ -456,7 +349,6 @@ export default function StudyDetail() {
                       <>
                         <FiSettings size={16} />
                         관리
-                        {pendingManageCount > 0 && <span className={styles.tabPendingBadge}>{pendingManageCount}</span>}
                       </>
                     )}
                   </button>
@@ -473,16 +365,16 @@ export default function StudyDetail() {
                       <>
                         <div ref={scrollRef} className={styles.chatMessages}>
                           {messages.length === 0 ? (
-                            <p className={styles.chatEmptyHint}>첫 메시지를 보내보세요!</p>
+                            <p style={{ textAlign: 'center', fontSize: '0.875rem', color: '#9ca3af', marginTop: '2rem' }}>첫 메시지를 보내보세요!</p>
                           ) : (
                             messages.map((msg) => {
                               const isMine = storeUser?._id === msg.userId;
                               return (
-                                <div key={msg.id} className={`${styles.msgRow} ${isMine ? styles.msgRowMine : ''}`}>
-                                  <div className={styles.msgAvatar}>{(msg.userName || '').charAt(0)}</div>
-                                  <div className={`${styles.msgBody} ${isMine ? styles.msgBodyMine : ''}`}>
-                                    <span className={styles.msgName}>{msg.userName}</span>
-                                    <div className={`${styles.msgBubble} ${isMine ? styles.msgBubbleMine : styles.msgBubbleOther}`}>{msg.content}</div>
+                                <div key={msg.id} className={`msgRow ${isMine ? 'msgRowMine' : ''}`}>
+                                  <div className="msgAvatar">{(msg.userName || '').charAt(0)}</div>
+                                  <div className={`msgBody ${isMine ? 'msgBodyMine' : ''}`}>
+                                    <span className="msgName">{msg.userName}</span>
+                                    <div className={`msgBubble ${isMine ? 'msgBubbleMine' : 'msgBubbleOther'}`}>{msg.content}</div>
                                   </div>
                                 </div>
                               );
@@ -513,7 +405,7 @@ export default function StudyDetail() {
               {/* 관리 탭 */}
               {isHost && activeTab === 'manage' && (
                 <div className={styles.tabContent}>
-                  <ParticipantManage study={study} updateParticipantStatus={handleParticipantDecision} />
+                  <ParticipantManage study={study} updateParticipantStatus={() => {}} />
                 </div>
               )}
             </div>
@@ -528,8 +420,8 @@ export default function StudyDetail() {
               </div>
               <div className={styles.infoCardBody}>
                 <div className={styles.infoRow}>
-                  <FiUsers className={styles.infoIcon} aria-hidden />
-                  <div className={styles.infoTextCol}>
+                  <FiUsers className={styles.infoIcon} />
+                  <div>
                     <p className={styles.infoLabel}>모집 인원</p>
                     <p className={styles.infoValue}>
                       {study.currentMembers} / {study.maxMembers}명
@@ -537,15 +429,15 @@ export default function StudyDetail() {
                   </div>
                 </div>
                 <div className={styles.infoRow}>
-                  <FiClock className={styles.infoIcon} aria-hidden />
-                  <div className={styles.infoTextCol}>
+                  <FiClock className={styles.infoIcon} />
+                  <div>
                     <p className={styles.infoLabel}>일정</p>
                     <p className={styles.infoValue}>{study.schedule}</p>
                   </div>
                 </div>
                 <div className={styles.infoRow}>
-                  <FiCalendar className={styles.infoIcon} aria-hidden />
-                  <div className={styles.infoTextCol}>
+                  <FiCalendar className={styles.infoIcon} />
+                  <div>
                     <p className={styles.infoLabel}>기간</p>
                     <p className={styles.infoValue}>
                       {study.startDate && !Number.isNaN(new Date(study.startDate).getTime()) ? format(new Date(study.startDate), 'yyyy.MM.dd', { locale: ko }) : study.startDate || '-'}
@@ -555,8 +447,8 @@ export default function StudyDetail() {
                   </div>
                 </div>
                 <div className={styles.infoRow}>
-                  <FiMapPin className={styles.infoIcon} aria-hidden />
-                  <div className={styles.infoTextCol}>
+                  <FiMapPin className={styles.infoIcon} />
+                  <div>
                     <p className={styles.infoLabel}>장소</p>
                     <p className={styles.infoValue}>{study.location.name}</p>
                   </div>
@@ -588,10 +480,10 @@ export default function StudyDetail() {
             {/* 호스트 전용 버튼 */}
             {isHost && (
               <>
-                <button className={study.isClosed ? styles.btnPrimary : styles.btnOutline} onClick={handleToggleClosed}>
+                <button className={study.isClosed ? `${styles.btnPrimary}` : `${styles.btnOutline}`} onClick={handleToggleClosed}>
                   {study.isClosed ? '모집 재개하기' : '모집 마감하기'}
                 </button>
-                <button className={styles.btnOutline} onClick={() => router.push(`/study/${id}/edit`)}>
+                <button className={styles.btnOutline} onClick={() => router.push(`/study/${study.id}/edit`)}>
                   <FiEdit2 size={15} />
                   스터디 수정
                 </button>
@@ -611,11 +503,11 @@ export default function StudyDetail() {
         <p className={styles.dialogDesc}>스터디장에게 전달할 메시지를 작성해주세요.</p>
         <textarea className={styles.dialogTextarea} rows={4} placeholder="자기소개, 참여 동기 등을 적어주세요." value={applyMessage} onChange={(e) => setApplyMessage(e.target.value)} />
         <div className={styles.dialogFooter}>
-          <button type="button" className={styles.dialogBtnOutline} onClick={() => setIsApplyDialogOpen(false)}>
+          <button className={styles.dialogBtnOutline} onClick={() => setIsApplyDialogOpen(false)}>
             취소
           </button>
-          <button type="button" className={styles.dialogBtnPrimary} onClick={() => void handleApply()} disabled={!applyMessage.trim() || isApplying}>
-            {isApplying ? '처리 중…' : '신청하기'}
+          <button className={styles.dialogBtnPrimary} onClick={handleApply} disabled={!applyMessage.trim()}>
+            신청하기
           </button>
         </div>
       </dialog>
@@ -625,10 +517,10 @@ export default function StudyDetail() {
         <p className={styles.dialogTitle}>스터디 삭제</p>
         <p className={styles.dialogDesc}>정말 이 스터디를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.</p>
         <div className={styles.dialogFooter}>
-          <button type="button" className={styles.dialogBtnOutline} onClick={() => setIsDeleteDialogOpen(false)}>
+          <button className={styles.dialogBtnOutline} onClick={() => setIsDeleteDialogOpen(false)}>
             취소
           </button>
-          <button type="button" className={styles.dialogBtnDestructive} onClick={handleDelete}>
+          <button className={styles.dialogBtnDestructive} onClick={handleDelete}>
             삭제
           </button>
         </div>
