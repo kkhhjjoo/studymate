@@ -1,12 +1,15 @@
 /* 사용자 정보 인터페이스 */
 export interface User {
-  _id: number;
+  _id: number | string;
   email: string;
   name: string;
   type: string;
   age: number;
   region: string;
+  gender?: string;
   image?: string;
+  providerAccountId?: string;
+  idToken?: string;
   token?: {
     accessToken: string;
     refreshToken: string;

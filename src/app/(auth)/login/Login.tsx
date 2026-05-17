@@ -34,7 +34,6 @@ function userFromGoogleJwt(credential: string): User {
       email: payload.email ?? '',
       name: payload.name ?? payload.email ?? '사용자',
       type: 'google',
-      gender: '',
       age: 0,
       region: '',
       image: payload.picture,
@@ -42,7 +41,7 @@ function userFromGoogleJwt(credential: string): User {
     };
   } catch {
     // JWT 파싱 실패 시 빈 사용자 반환
-    return { _id: '', email: '', name: '사용자', type: 'google', gender: '', age: 0, region: '' };
+    return { _id: '', email: '', name: '사용자', type: 'google', age: 0, region: '' };
   }
 }
 

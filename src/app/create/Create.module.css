@@ -59,6 +59,7 @@
   font-size: 0.9rem;
   outline: none;
   background-color: #f9fafb;
+  color: #111827;
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease,
