@@ -63,6 +63,7 @@ export default function MypagePage() {
   const [studies, setStudies] = useState<StudyCardData[]>([]);
   const [activeTab, setActiveTab] = useState<'bookmark' | 'manage' | 'participated' | null>(null);
   const [bio, setBio] = useState('안녕하세요! 잘 부탁드려요!');
+  const [avatarError, setAvatarError] = useState(false);
 
   const accessToken = user?.token?.accessToken ?? '';
 
@@ -119,8 +120,8 @@ export default function MypagePage() {
         <div className="profileCard">
           <div className="profileWrapper">
             <div className="profileAvatar">
-              {user.image ? (
-                <Image src={user.image} alt={user.name} width={48} height={48} />
+              {user.image && !avatarError && (user.image.startsWith('http') || user.image.startsWith('/')) ? (
+                <Image src={user.image} alt={user.name} width={48} height={48} unoptimized onError={() => setAvatarError(true)} />
               ) : (
                 <span>{user.name.charAt(0)}</span>
               )}
